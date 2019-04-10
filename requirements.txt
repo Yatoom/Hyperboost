@@ -1,3 +1,4 @@
+ConfigSpace
 numpy
 lightgbm
 sklearn

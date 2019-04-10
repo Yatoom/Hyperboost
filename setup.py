@@ -17,5 +17,5 @@ setup(
     author_email='jmapvhoof@gmail.com',
     description='A hyperparameter optimization tool based on SMAC and gradient boosting.',
     # long_description=long_description,
-    install_requires=["numpy", "lightgbm", "sklearn", "pandas", "smac", "openml"],
+    install_requires=["numpy", "lightgbm", "sklearn", "pandas", "smac", "openml", "ConfigSpace"],
 )
