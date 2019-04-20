@@ -4,7 +4,6 @@ import math
 import time
 
 import numpy as np
-import pynisher
 
 from smac.tae.execute_ta_run import StatusType, ExecuteTARun
 from smac.utils.constants import MAXINT
@@ -132,6 +131,8 @@ class AbstractTAFunc(ExecuteTARun):
             obj_kwargs['instance'] = instance
 
         if self.use_pynisher:
+
+            import pynisher
 
             obj = pynisher.enforce_limits(**arguments)(self.ta)
     
