@@ -2,7 +2,8 @@ import typing
 
 import numpy as np
 from lightgbm import LGBMRegressor
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
+
 from smac.epm.base_epm import AbstractEPM
 
 
@@ -23,6 +24,7 @@ class LightEPM(AbstractEPM):
         # Observed values
         self.X = None
         self.y = None
+        self.X_transformed = None
 
         # The incumbent value
         self.inc = None
@@ -45,8 +47,8 @@ class LightEPM(AbstractEPM):
 
         self.X = X_
         self.y = y_
-        self.kdtree = KDTree(self.transform(X_))
-
+        self.X_transformed = self.transform(X)
+        self.kdtree = cKDTree(self.X_transformed)
         self.inc = np.max(y_)
         n_samples = X_.shape[0]
         if n_samples >= 2:
