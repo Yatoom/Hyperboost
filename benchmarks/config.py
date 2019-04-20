@@ -23,14 +23,18 @@ def get_scenario(cs, num_iterations, deterministic):
     })
 
 
-def create_smac_runner(model, X, y, cv):
+def create_smac_runner(model, X, y, cv, fit_params=None):
+
+    if fit_params is None:
+        fit_params = {}
+
     # Executor
     def execute_from_cfg(cfg, seed=None):
         print(".", end="", flush=True)
         mdl = from_cfg(model, cfg, seed=seed)
         ss = ShuffleSplit(n_splits=cv, random_state=0, test_size=0.10, train_size=None)
         mdl.fit(X, y)
-        acc = cross_val_score(mdl, X, y, cv=ss, n_jobs=1, fit_params={"verbose": -1})
+        acc = cross_val_score(mdl, X, y, cv=ss, n_jobs=-1, fit_params=fit_params)
         return 1 - np.mean(acc)
 
     return execute_from_cfg

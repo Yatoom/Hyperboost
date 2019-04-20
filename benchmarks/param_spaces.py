@@ -19,11 +19,10 @@ class RandomForestSpace:
 
     # Hyper parameter space
     cs = ConfigurationSpace()
-    num_leaves = UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32)
     cs.add_hyperparameters([
         UniformFloatHyperparameter("colsample_bytree", 0.20, 0.80, default_value=0.70),
         UniformFloatHyperparameter("subsample", 0.20, 0.80, default_value=0.66),
-        num_leaves,
+        UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
         UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
         UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
         UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
@@ -32,7 +31,7 @@ class RandomForestSpace:
         Constant("subsample_freq", 1),
         Constant("boosting_type", "rf"),
         Constant("verbose", -1),
-        Constant("n_jobs", 1),
+        Constant("n_jobs", -1),
     ])
     # cs.add_condition(SingleValueForbiddenClause(num_leaves, 31))
 
