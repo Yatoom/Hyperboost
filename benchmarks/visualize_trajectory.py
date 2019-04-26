@@ -2,18 +2,26 @@ import json
 import os
 import re
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 from benchmarks import config
 
 # Settings
-dir = "LightEPM_QR"
+dir = "LightQR"
 in_progress = False
 name = "DecisionTree"
 
-files = [filename for filename in os.listdir(dir) if filename.startswith(f"results-{name}")]
+
+def matches(filename):
+    match = re.match(fr"results-{name}-[0-9]*\.json", filename)
+    return False if match is None else True
+
+
+files = [filename for filename in os.listdir(dir) if matches(filename)]
+print("matching files:", files)
 
 
 def mean_of_runs(data):
@@ -31,6 +39,18 @@ def mean_of_runs(data):
 
     return result
 
+
+def multi_rank(*args):
+    arrays = [np.array(arg) for arg in args]
+    ranks = np.array([np.zeros_like(ar) for ar in arrays])
+    shape = arrays[0].shape
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            values = [ar[i, j] for ar in arrays]
+            ranks[:, i, j] = rankdata(values)
+    return ranks
+
+
 def dual_rank(a, b):
     a = np.array(a)
     b = np.array(b)
@@ -45,42 +65,46 @@ def dual_rank(a, b):
     return a_res, b_res
 
 
-def rank_against(mean_runs):
-    smac_train = [i['smac']['loss_train'] for i in mean_runs.values()]
-    hyperboost_train = [i['hyperboost']['loss_train'] for i in mean_runs.values()]
-    smac_test = [i['smac']['loss_test'] for i in mean_runs.values()]
-    hyperboost_test = [i['hyperboost']['loss_test'] for i in mean_runs.values()]
+def rank_against(mean_runs, dual=False):
+    methods = list(list(mean_runs.values())[0].keys())
+    train = {}
+    test = {}
+    for method in methods:
+        train[method] = [i[method]['loss_train'] for i in mean_runs.values()]
+        test[method] = [i[method]['loss_test'] for i in mean_runs.values()]
 
-    smac_train, hyperboost_train = dual_rank(smac_train, hyperboost_train)
-    smac_test, hyperboost_test = dual_rank(smac_test, hyperboost_test)
+    if dual:
+        ranked_train = dual_rank(*train.values())
+        ranked_test = dual_rank(*test.values())
+    else:
+        ranked_train = multi_rank(*train.values())
+        ranked_test = multi_rank(*test.values())
 
-    return {
-        "smac_train_mean": np.mean(smac_train, axis=0),
-        "smac_train_std": np.std(smac_train, axis=0),
-        "smac_test_mean": np.mean(smac_test, axis=0),
-        "smac_test_std": np.std(smac_test, axis=0),
-        "hyperboost_train_mean": np.mean(hyperboost_train, axis=0),
-        "hyperboost_train_std": np.std(hyperboost_train, axis=0),
-        "hyperboost_test_mean": np.mean(hyperboost_test, axis=0),
-        "hyperboost_test_std": np.std(hyperboost_test, axis=0),
-    }
+    result = {}
+
+    for index, method in enumerate(methods):
+        result[f"{method}_mean_train"] = np.mean(ranked_train[index], axis=0)
+        result[f"{method}_std_train"] = np.std(ranked_train[index], axis=0)
+        result[f"{method}_mean_test"] = np.mean(ranked_test[index], axis=0)
+        result[f"{method}_std_test"] = np.std(ranked_test[index], axis=0)
+
+    return result
+
 
 def mean_of_datasets(mean_runs):
-    smac_train = [i['smac']['loss_train'] for i in mean_runs.values()]
-    hyperboost_train = [i['hyperboost']['loss_train'] for i in mean_runs.values()]
-    smac_test = [i['smac']['loss_test'] for i in mean_runs.values()]
-    hyperboost_test = [i['hyperboost']['loss_test'] for i in mean_runs.values()]
+    methods = list(list(mean_runs.values())[0].keys())
+    result = {}
 
-    return {
-        "smac_train_mean": np.mean(smac_train, axis=0),
-        "smac_train_std": np.std(smac_train, axis=0),
-        "smac_test_mean": np.mean(smac_test, axis=0),
-        "smac_test_std": np.std(smac_test, axis=0),
-        "hyperboost_train_mean": np.mean(hyperboost_train, axis=0),
-        "hyperboost_train_std": np.std(hyperboost_train, axis=0),
-        "hyperboost_test_mean": np.mean(hyperboost_test, axis=0),
-        "hyperboost_test_std": np.std(hyperboost_test, axis=0),
-    }
+    for method in methods:
+        method_train = [i[method]['loss_train'] for i in mean_runs.values()]
+        method_test = [i[method]['loss_test'] for i in mean_runs.values()]
+        result[f"{method}_mean_train"] = np.mean(method_train, axis=0)
+        result[f"{method}_mean_test"] = np.mean(method_test, axis=0)
+        result[f"{method}_std_train"] = np.std(method_train, axis=0)
+        result[f"{method}_std_test"] = np.std(method_test, axis=0)
+
+    return result
+
 
 if __name__ == "__main__":
     results = {}
@@ -89,7 +113,7 @@ if __name__ == "__main__":
         with open(os.path.join(dir, file), "r") as f:
             data = json.load(f)
             r = mean_of_runs(data)
-            r = rank_against(r)
+            r = rank_against(r, dual=True)
             # r = mean_of_datasets(r)
             results[seed] = r
 
@@ -99,11 +123,13 @@ if __name__ == "__main__":
     frames = [pd.DataFrame(i) for i in results]
     mean = pd.concat(frames).groupby(level=0).mean().iloc[1:]
     std = pd.concat(frames).groupby(level=0).std().iloc[1:]
-    mean["smac_train_mean"].plot()
-    mean["hyperboost_train_mean"].plot()
-    plt.fill_between(np.arange(mean["smac_train_mean"].shape[0]), mean["smac_train_mean"] - std["smac_train_mean"], mean["smac_train_mean"] + std["smac_train_mean"], alpha=0.5)
-    plt.fill_between(np.arange(mean["hyperboost_train_mean"].shape[0]), mean["hyperboost_train_mean"] - std["hyperboost_train_mean"],
-                     mean["hyperboost_train_mean"] + std["hyperboost_train_mean"], alpha=0.5)
+
+    columns = [i for i in mean.columns if "mean_train" in i]
+
+    for i in columns:
+        mean[i].plot()
+        plt.fill_between(np.arange(mean[i].shape[0]), mean[i] - std[i], mean[i] + std[i], alpha=0.5)
+
     plt.legend()
     plt.show()
     print()
