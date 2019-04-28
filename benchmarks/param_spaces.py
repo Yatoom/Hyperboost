@@ -47,15 +47,14 @@ class DecisionTreeSpace:
     max_depth = UniformIntegerHyperparameter('max_depth', 1, 20, default_value=20)
     min_samples_split = UniformIntegerHyperparameter("min_samples_split", 2, 20, default_value=2)
     min_samples_leaf = UniformIntegerHyperparameter("min_samples_leaf", 1, 20, default_value=1)
-    min_weight_fraction_leaf = Constant("min_weight_fraction_leaf", 0.0)
-    max_features = UnParametrizedHyperparameter('max_features', 1.0)
-    max_leaf_nodes = UnParametrizedHyperparameter("max_leaf_nodes", "None")
-    min_impurity_decrease = UnParametrizedHyperparameter('min_impurity_decrease', 0.0)
 
-    cs.add_hyperparameters([criterion, max_features, max_depth,
-                            min_samples_split, min_samples_leaf,
-                            min_weight_fraction_leaf, max_leaf_nodes,
-                            min_impurity_decrease])
+    cs.add_hyperparameters([criterion, max_depth, min_samples_split, min_samples_leaf])
+
+    @staticmethod
+    def from_cfg(random_state=None, **cfg):
+        return DecisionTreeSpace.model(min_weight_fraction_leaf=0, max_features=1.0, max_leaf_nodes=None,
+                                       min_impurity_decrease=0.0, random_state=random_state,
+                                       **cfg)
 
 
 class LDASpace:
@@ -98,7 +97,8 @@ class AdaboostSpace:
         learning_rate = cfg['learning_rate']
         algorithm = cfg['algorithm']
         return AdaboostSpace.model(n_estimators=n_estimators, learning_rate=learning_rate,
-                          algorithm=algorithm, base_estimator=DecisionTreeClassifier(max_depth=max_depth), random_state=random_state)
+                                   algorithm=algorithm, base_estimator=DecisionTreeClassifier(max_depth=max_depth),
+                                   random_state=random_state)
 
 
 class ExtraTreesSpace:

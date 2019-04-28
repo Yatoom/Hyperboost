@@ -47,23 +47,23 @@ for state in config.SEEDS:
                 ########################################################################################################
                 # SMAC
                 ########################################################################################################
-                smac = SMAC(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
-                smac_start = time.time()
-                incumbent_smac = smac.optimize()
-                smac_end = time.time()
-                print(f"SMAC time: {smac_end - smac_start}")
-                smac_train, smac_test = config.get_smac_trajectories(smac, model, config.NUM_ITER, X_train,
-                                                                     y_train, X_test, y_test,
-                                                                     seeds=config.SEEDS)
-                write(f"\r[SMAC] train loss = {smac_train[-1]} | test loss = {smac_test[-1]}")
-                smac_res = {
-                    "loss_train": smac_train,
-                    "loss_test": smac_test,
-                    "total_time": smac.stats.wallclock_time_used,
-                    "run_time": smac.stats.ta_time_used,
-                    "n_configs": smac.runhistory._n_id,
-                }
-                records[task_id]["smac"].append(smac_res)
+                # smac = SMAC(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
+                # smac_start = time.time()
+                # incumbent_smac = smac.optimize()
+                # smac_end = time.time()
+                # print(f"SMAC time: {smac_end - smac_start}")
+                # smac_train, smac_test = config.get_smac_trajectories(smac, model, config.NUM_ITER, X_train,
+                #                                                      y_train, X_test, y_test,
+                #                                                      seeds=config.SEEDS)
+                # write(f"\r[SMAC] train loss = {smac_train[-1]} | test loss = {smac_test[-1]}")
+                # smac_res = {
+                #     "loss_train": smac_train,
+                #     "loss_test": smac_test,
+                #     "total_time": smac.stats.wallclock_time_used,
+                #     "run_time": smac.stats.ta_time_used,
+                #     "n_configs": smac.runhistory._n_id,
+                # }
+                # records[task_id]["smac"].append(smac_res)
 
                 # ########################################################################################################
 

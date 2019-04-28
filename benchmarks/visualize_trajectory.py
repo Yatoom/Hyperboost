@@ -113,8 +113,8 @@ if __name__ == "__main__":
                     {"dir": ".", "name": "DecisionTree-stoch"},
                     ["hyperboost-qrd"])
     r = {seed: mean_of_runs(i) for seed, i in r.items()}
-    r = {seed: rank_against(i) for seed, i in r.items()}
-    # r = {seed: mean_of_datasets(i) for seed, i in r.items()}
+    # r = {seed: rank_against(i) for seed, i in r.items()}
+    r = {seed: mean_of_datasets(i) for seed, i in r.items()}
     results = r
 
     # results = {}

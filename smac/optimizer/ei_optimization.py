@@ -571,10 +571,10 @@ class InterleavedLocalAndRandomSearch(AcquisitionFunctionMaximizer):
 
         next_configs_by_acq_value.sort(reverse=True, key=lambda x: x[0])
 
-        def is_seen(value):
-            return any([value == i for i in self.acquisition_function.model.X])
+        # def is_seen(value):
+        #     return any([value == i for i in self.acquisition_function.model.X])
 
-        next_configs_by_acq_value = [i for i in next_configs_by_acq_value if not is_seen(i)]
+        # next_configs_by_acq_value = [i for i in next_configs_by_acq_value if not is_seen(i)]
         self.logger.debug(
             "First 10 acq func (origin) values of selected configurations: %s",
             str([[_[0], _[1].origin] for _ in next_configs_by_acq_value[:10]])
