@@ -69,7 +69,9 @@ class LightEPM(AbstractEPM):
             loss = self.light.predict(X)
             dist, ind = self.kdtree.query(self.transform(X), k=1)
             scale = np.var(self.X) if np.var(self.X) != 0 else 1
-            dist = dist.reshape(-1) / self.max_distance * scale
+            unscaled_dist = dist.reshape(-1) / self.max_distance
+            loss[unscaled_dist == 0] = 1
+            dist = unscaled_dist * scale
             closeness = 1 - dist
 
         return loss, closeness

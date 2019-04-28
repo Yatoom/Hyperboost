@@ -40,7 +40,7 @@ class DecisionTreeSpace:
     # Properties
     model = DecisionTreeClassifier
     is_deterministic = False
-    name = "DecisionTree"
+    name = "DecisionTree-stoch"
 
     # Hyper parameter space
     cs = ConfigurationSpace()
