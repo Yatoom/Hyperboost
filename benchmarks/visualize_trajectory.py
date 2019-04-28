@@ -10,9 +10,11 @@ from scipy.stats import rankdata
 from benchmarks import config
 
 # Settings
+from benchmarks.combine_results import combine_all
+
 dir = "LightQR"
 in_progress = False
-name = "DecisionTree"
+name = "RandomForest"
 
 
 def matches(filename):
@@ -30,7 +32,7 @@ def mean_of_runs(data):
         run = {}
         for method, trajectories in values.items():
             loss_train = np.mean([i['loss_train'] for i in trajectories], axis=0)
-            loss_test = np.mean([i['loss_train'] for i in trajectories], axis=0)
+            loss_test = np.mean([i['loss_test'] for i in trajectories], axis=0)
             run[method] = {
                 "loss_train": loss_train,
                 "loss_test": loss_test
@@ -107,15 +109,23 @@ def mean_of_datasets(mean_runs):
 
 
 if __name__ == "__main__":
-    results = {}
-    for file in files:
-        seed = re.findall(r"[0-9]+", file)[0]
-        with open(os.path.join(dir, file), "r") as f:
-            data = json.load(f)
-            r = mean_of_runs(data)
-            r = rank_against(r, dual=True)
-            # r = mean_of_datasets(r)
-            results[seed] = r
+    r = combine_all({"dir": "LightQR", "name": "DecisionTree-stoch"},
+                    {"dir": "LightQR_zero", "name": "DecisionTree-stoch"},
+                    ["hyperboost-qrd"])
+    r = {seed: mean_of_runs(i) for seed, i in r.items()}
+    r = {seed: rank_against(i) for seed, i in r.items()}
+    # r = {seed: mean_of_datasets(i) for seed, i in r.items()}
+    results = r
+
+    # results = {}
+    # for file in files:
+    #     seed = re.findall(r"[0-9]+", file)[0]
+    #     with open(os.path.join(dir, file), "r") as f:
+    #         data = json.load(f)
+    #         r = mean_of_runs(data)
+    #         r = rank_against(r, dual=False)
+    #         r = mean_of_datasets(r)
+            # results[seed] = r
 
     results = [results[str(i)] for i in config.SEEDS if str(i) in results.keys()]
     if in_progress:
@@ -125,6 +135,7 @@ if __name__ == "__main__":
     std = pd.concat(frames).groupby(level=0).std().iloc[1:]
 
     columns = [i for i in mean.columns if "mean_train" in i]
+    # columns = ["smac_mean_train", "hyperboost-qrd_mean_train"]
 
     for i in columns:
         mean[i].plot()
