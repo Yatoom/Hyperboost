@@ -6,7 +6,7 @@ import re
 def combine_two_dicts(original, additional, keys):
     result = original
     for key in keys:
-        result = {i: dict(j, **{key: additional[i][key]}) for i, j in result.items()}
+        result = {i: dict(j, **{key: additional[i][key] if key in additional[i] else None}) for i, j in result.items() if i in additional.keys()}
     return result
 
 
@@ -39,6 +39,9 @@ def combine_all(o, a, keys):
     intersection = set(o_seeds + a_seeds)
     originals = [filepath for seed, filepath in zip(o_seeds, originals) if seed in intersection]
     additionals = [filepath for seed, filepath in zip(o_seeds, additionals) if seed in intersection]
+
+    print("Original:", originals)
+    print("Additions:", additionals)
 
     # Combine files to retrieve the result
     result = {seed: combine_two_files(i, j, keys) for i, j, seed in zip(originals, additionals, intersection)}

@@ -46,10 +46,13 @@ def from_cfg(model, cfg, seed=None):
     config = {k: None if i == "None" else i for k, i in config.items()}
 
     # print(config)
-    try:
-        mdl = model.model(random_state=seed, **config)
-    except:
-        mdl = model.model(**config)
+    if hasattr(model, "from_cfg"):
+        mdl = model.from_cfg(**config, random_state=seed)
+    else:
+        try:
+            mdl = model.model(random_state=seed, **config)
+        except:
+            mdl = model.model(**config)
     return mdl
 
 

@@ -12,9 +12,9 @@ from benchmarks import config
 # Settings
 from benchmarks.combine_results import combine_all
 
-dir = "LightQR"
+dir = "."
 in_progress = False
-name = "RandomForest"
+name = "Adaboost"
 
 
 def matches(filename):
@@ -110,7 +110,7 @@ def mean_of_datasets(mean_runs):
 
 if __name__ == "__main__":
     r = combine_all({"dir": "LightQR", "name": "DecisionTree-stoch"},
-                    {"dir": "LightQR_zero", "name": "DecisionTree-stoch"},
+                    {"dir": ".", "name": "DecisionTree-stoch"},
                     ["hyperboost-qrd"])
     r = {seed: mean_of_runs(i) for seed, i in r.items()}
     r = {seed: rank_against(i) for seed, i in r.items()}
@@ -124,8 +124,8 @@ if __name__ == "__main__":
     #         data = json.load(f)
     #         r = mean_of_runs(data)
     #         r = rank_against(r, dual=False)
-    #         r = mean_of_datasets(r)
-            # results[seed] = r
+    #         # r = mean_of_datasets(r)
+    #         results[seed] = r
 
     results = [results[str(i)] for i in config.SEEDS if str(i) in results.keys()]
     if in_progress:

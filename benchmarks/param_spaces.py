@@ -1,13 +1,11 @@
 # Random Forest based on LightGBM
 from ConfigSpace import ConfigurationSpace
 from ConfigSpace import UniformFloatHyperparameter, UniformIntegerHyperparameter
-from ConfigSpace.conditions import EqualsCondition, InCondition
-from ConfigSpace.forbidden import ForbiddenAndConjunction, ForbiddenEqualsClause, SingleValueForbiddenClause
 from ConfigSpace.hyperparameters import CategoricalHyperparameter, Constant, UnParametrizedHyperparameter
 from lightgbm import LGBMClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier
-from sklearn.svm import SVC, LinearSVC
+from sklearn.ensemble import ExtraTreesClassifier, AdaBoostClassifier
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -68,19 +66,20 @@ class LDASpace:
 
     # Hyper parameter space
     cs = ConfigurationSpace()
-    shrinkage = CategoricalHyperparameter("shrinkage", ["None", "auto", "manual"], default_value="None")
-    shrinkage_factor = UniformFloatHyperparameter("shrinkage_factor", 0., 1., 0.5)
+    # shrinkage = CategoricalHyperparameter("shrinkage", ["None", "auto", "manual"], default_value="None")
+    shrinkage = UniformFloatHyperparameter("shrinkage", 0., 1., 0.5)
     n_components = UniformIntegerHyperparameter('n_components', 1, 250, default_value=10)
     tol = UniformFloatHyperparameter("tol", 1e-5, 1e-1, default_value=1e-4, log=True)
-    cs.add_hyperparameters([shrinkage, shrinkage_factor, n_components, tol])
+    solver = CategoricalHyperparameter("solver", ["lsqr", "eigen"], default_value="eigen")
+    cs.add_hyperparameters([shrinkage, n_components, tol])
 
-    cs.add_condition(EqualsCondition(shrinkage_factor, shrinkage, "manual"))
+    # cs.add_condition(EqualsCondition(shrinkage_factor, shrinkage, "manual"))
 
 
 class AdaboostSpace:
     # Properties
     model = AdaBoostClassifier
-    is_deterministic = True
+    is_deterministic = False
     name = "Adaboost"
 
     # Hyper parameter space
@@ -91,6 +90,15 @@ class AdaboostSpace:
     algorithm = CategoricalHyperparameter(name="algorithm", choices=["SAMME.R", "SAMME"], default_value="SAMME.R")
     max_depth = UniformIntegerHyperparameter(name="max_depth", lower=1, upper=10, default_value=1, log=False)
     cs.add_hyperparameters([n_estimators, learning_rate, algorithm, max_depth])
+
+    @staticmethod
+    def from_cfg(random_state=None, **cfg):
+        max_depth = cfg['max_depth']
+        n_estimators = cfg['n_estimators']
+        learning_rate = cfg['learning_rate']
+        algorithm = cfg['algorithm']
+        return AdaboostSpace.model(n_estimators=n_estimators, learning_rate=learning_rate,
+                          algorithm=algorithm, base_estimator=DecisionTreeClassifier(max_depth=max_depth), random_state=random_state)
 
 
 class ExtraTreesSpace:
@@ -125,7 +133,7 @@ class ExtraTreesSpace:
 
     bootstrap = CategoricalHyperparameter(
         "bootstrap", ["True", "False"], default_value="False")
-    n_jobs = Constant("n_jobs", 4)
+    n_jobs = Constant("n_jobs", -1)
     cs.add_hyperparameters([n_estimators, criterion, max_features,
                             max_depth, min_samples_split, min_samples_leaf,
                             min_weight_fraction_leaf, max_leaf_nodes,
