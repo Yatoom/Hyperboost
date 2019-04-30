@@ -23,15 +23,14 @@ class RandomForestSpace:
         UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
         UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
         UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
-        UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
-        UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
-        Constant("n_estimators", 100),
-        Constant("subsample_freq", 1),
-        Constant("boosting_type", "rf"),
-        Constant("verbose", -1),
-        Constant("n_jobs", -1),
+        # UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
+        # UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
     ])
-    # cs.add_condition(SingleValueForbiddenClause(num_leaves, 31))
+
+    @staticmethod
+    def from_cfg(random_state=None, **cfg):
+        return RandomForestSpace.model(n_estimators=100, subsample_freq=1, boosting_type="rf", verbose=-1, n_jobs=-1,
+                                       random_state=random_state, **cfg)
 
 
 class DecisionTreeSpace:
@@ -69,7 +68,7 @@ class LDASpace:
     shrinkage = UniformFloatHyperparameter("shrinkage", 0., 1., 0.5)
     n_components = UniformIntegerHyperparameter('n_components', 1, 250, default_value=10)
     tol = UniformFloatHyperparameter("tol", 1e-5, 1e-1, default_value=1e-4, log=True)
-    solver = CategoricalHyperparameter("solver", ["lsqr", "eigen"], default_value="eigen")
+    # solver = CategoricalHyperparameter("solver", ["lsqr", "eigen"], default_value="eigen")
     cs.add_hyperparameters([shrinkage, n_components, tol])
 
     # cs.add_condition(EqualsCondition(shrinkage_factor, shrinkage, "manual"))
@@ -149,38 +148,14 @@ class SVMSpace:
     # Hyperparameter space
     cs = ConfigurationSpace()
 
-    # penalty = CategoricalHyperparameter(
-    #     "penalty", ["l1", "l2"], default_value="l2")
-    penalty = Constant("penalty", "l2")
-    # loss = CategoricalHyperparameter(
-    #     "loss", ["hinge", "squared_hinge"], default_value="squared_hinge")
-    loss = Constant("loss", "squared_hinge")
-    dual = Constant("dual", "False")
-    # This is set ad-hoc
     tol = UniformFloatHyperparameter(
         "tol", 1e-5, 1e-1, default_value=1e-4, log=True)
     C = UniformFloatHyperparameter(
         "C", 0.03125, 32768, log=True, default_value=1.0)
-    multi_class = Constant("multi_class", "ovr")
-    # These are set ad-hoc
-    fit_intercept = Constant("fit_intercept", "True")
-    intercept_scaling = Constant("intercept_scaling", 1)
-    cs.add_hyperparameters([penalty, loss, dual, tol, C, multi_class,
-                            fit_intercept, intercept_scaling])
 
-    # penalty_and_loss = ForbiddenAndConjunction(
-    #     ForbiddenEqualsClause(penalty, "l1"),
-    #     ForbiddenEqualsClause(loss, "hinge")
-    # )
-    # constant_penalty_and_loss = ForbiddenAndConjunction(
-    #     ForbiddenEqualsClause(dual, "False"),
-    #     ForbiddenEqualsClause(penalty, "l2"),
-    #     ForbiddenEqualsClause(loss, "hinge")
-    # )
-    # penalty_and_dual = ForbiddenAndConjunction(
-    #     ForbiddenEqualsClause(dual, "False"),
-    #     ForbiddenEqualsClause(penalty, "l1")
-    # )
-    # cs.add_forbidden_clause(penalty_and_loss)
-    # cs.add_forbidden_clause(constant_penalty_and_loss)
-    # cs.add_forbidden_clause(penalty_and_dual)
+    cs.add_hyperparameters([tol, C])
+
+    @staticmethod
+    def from_cfg(random_state=None, **cfg):
+        return SVMSpace.model(penalty="l2", loss="squared_hing", dual=False, multi_class="ovr", fit_intercept=True,
+                              intercept_scaling=1, **cfg)
