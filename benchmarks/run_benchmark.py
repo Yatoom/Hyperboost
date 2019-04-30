@@ -19,11 +19,11 @@ def write(*args, **kwargs):
 
 for state in config.SEEDS:
     rng = np.random.RandomState(state)
-    for model in [DecisionTreeSpace]:
+    for model in [RandomForestSpace]:
         records = {}
         for task_id in config.TASKS:
 
-            records[task_id] = {"smac": [], "hyperboost-qrd": []}
+            records[task_id] = {"smac": [], "hyperboost-var": [], "hyperboost-drop": []}
 
             task = openml.tasks.get_task(task_id)
             X, y = task.get_X_and_y()
@@ -47,23 +47,23 @@ for state in config.SEEDS:
                 ########################################################################################################
                 # SMAC
                 ########################################################################################################
-                # smac = SMAC(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
-                # smac_start = time.time()
-                # incumbent_smac = smac.optimize()
-                # smac_end = time.time()
-                # print(f"SMAC time: {smac_end - smac_start}")
-                # smac_train, smac_test = config.get_smac_trajectories(smac, model, config.NUM_ITER, X_train,
-                #                                                      y_train, X_test, y_test,
-                #                                                      seeds=config.SEEDS)
-                # write(f"\r[SMAC] train loss = {smac_train[-1]} | test loss = {smac_test[-1]}")
-                # smac_res = {
-                #     "loss_train": smac_train,
-                #     "loss_test": smac_test,
-                #     "total_time": smac.stats.wallclock_time_used,
-                #     "run_time": smac.stats.ta_time_used,
-                #     "n_configs": smac.runhistory._n_id,
-                # }
-                # records[task_id]["smac"].append(smac_res)
+                smac = SMAC(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
+                smac_start = time.time()
+                incumbent_smac = smac.optimize()
+                smac_end = time.time()
+                print(f"SMAC time: {smac_end - smac_start}")
+                smac_train, smac_test = config.get_smac_trajectories(smac, model, config.NUM_ITER, X_train,
+                                                                     y_train, X_test, y_test,
+                                                                     seeds=config.SEEDS)
+                write(f"\r[SMAC] train loss = {smac_train[-1]} | test loss = {smac_test[-1]}")
+                smac_res = {
+                    "loss_train": smac_train,
+                    "loss_test": smac_test,
+                    "total_time": smac.stats.wallclock_time_used,
+                    "run_time": smac.stats.ta_time_used,
+                    "n_configs": smac.runhistory._n_id,
+                }
+                records[task_id]["smac"].append(smac_res)
 
                 # ########################################################################################################
 
@@ -95,7 +95,33 @@ for state in config.SEEDS:
                 ########################################################################################################
                 # Hyperboost QRD
                 ########################################################################################################
-                hyperboost = Hyperboost(scenario=scenario, rng=rng, method="QRD", tae_runner=try_params)
+                for scaling in ["var"]:
+                    hyperboost = Hyperboost(scenario=scenario, rng=rng, method="QRD", tae_runner=try_params, scaling=scaling)
+                    hyper_start = time.time()
+                    incumbent_hyperboost = hyperboost.optimize()
+                    hyper_end = time.time()
+                    print(f"Hyperboost time: {hyper_end - hyper_start}")
+                    hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
+                                                                     y_train, X_test, y_test,
+                                                                     seeds=config.SEEDS)
+                    write(f"\r[HYBO] train loss = {hb_train[-1]} | test loss = {hb_test[-1]}")
+
+                    hb_res = {
+                        "loss_train": hb_train,
+                        "loss_test": hb_test,
+                        "total_time": hyperboost.stats.wallclock_time_used,
+                        "run_time": hyperboost.stats.ta_time_used,
+                        "n_configs": hyperboost.runhistory._n_id,
+                    }
+
+                    records[task_id][f"hyperboost-{scaling}"].append(hb_res)
+
+                ########################################################################################################
+
+                ########################################################################################################
+                # Hyperboost Drop
+                ########################################################################################################
+                hyperboost = Hyperboost(scenario=scenario, rng=rng, method="drop", tae_runner=try_params)
                 hyper_start = time.time()
                 incumbent_hyperboost = hyperboost.optimize()
                 hyper_end = time.time()
@@ -113,34 +139,9 @@ for state in config.SEEDS:
                     "n_configs": hyperboost.runhistory._n_id,
                 }
 
-                records[task_id]["hyperboost-qrd"].append(hb_res)
+                records[task_id]["hyperboost-drop"].append(hb_res)
 
                 ########################################################################################################
-
-                # ########################################################################################################
-                # # Hyperboost Drop
-                # ########################################################################################################
-                # hyperboost = Hyperboost(scenario=scenario, rng=rng, method="drop", tae_runner=try_params)
-                # hyper_start = time.time()
-                # incumbent_hyperboost = hyperboost.optimize()
-                # hyper_end = time.time()
-                # print(f"Hyperboost time: {hyper_end - hyper_start}")
-                # hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
-                #                                                  y_train, X_test, y_test,
-                #                                                  seeds=config.SEEDS)
-                # write(f"\r[HYBO] train loss = {hb_train[-1]} | test loss = {hb_test[-1]}")
-                #
-                # hb_res = {
-                #     "loss_train": hb_train,
-                #     "loss_test": hb_test,
-                #     "total_time": hyperboost.stats.wallclock_time_used,
-                #     "run_time": hyperboost.stats.ta_time_used,
-                #     "n_configs": hyperboost.runhistory._n_id,
-                # }
-                #
-                # records[task_id]["hyperboost-drop"].append(hb_res)
-                #
-                # ########################################################################################################
 
 
 

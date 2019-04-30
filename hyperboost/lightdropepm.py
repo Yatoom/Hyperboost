@@ -69,7 +69,7 @@ class LightDropEPM(AbstractEPM):
         return loss, sigma
 
     @staticmethod
-    def _get_uncertainty(lgbm, data, fix_trees=0.1, drop_trees=0.1):
+    def _get_uncertainty(lgbm, data, fix_trees=0, drop_trees=0.5):
         num_trees = lgbm._Booster.num_trees()
         fixed_trees = int(fix_trees * num_trees)
         dropped_trees = int((num_trees - fixed_trees) * drop_trees)

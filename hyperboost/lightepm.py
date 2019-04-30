@@ -9,10 +9,12 @@ from smac.epm.base_epm import AbstractEPM
 
 class LightEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components: float = None, seed=None):
+                 instance_features: np.ndarray = None, pca_components: float = None, seed=None, scaling="var"):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
                                    alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
+
+        self.scaling = scaling
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -68,7 +70,14 @@ class LightEPM(AbstractEPM):
         else:
             loss = self.light.predict(X)
             dist, ind = self.kdtree.query(self.transform(X), k=1)
-            scale = np.var(self.X) if np.var(self.X) != 0 else 1
+
+            if self.scaling == "var":
+                scale = np.var(self.X)
+            elif self.scaling == "std":
+                scale = np.std(self.X)
+            else:
+                scale = 1
+
             unscaled_dist = dist.reshape(-1) / self.max_distance
             # loss[unscaled_dist == 0] = 1
             dist = unscaled_dist * scale

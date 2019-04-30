@@ -10,7 +10,7 @@ from smac.utils.util_funcs import get_types
 
 
 class Hyperboost(SMAC):
-    def __init__(self, scenario: Scenario, rng: np.random.RandomState = None, method="drop", **kwargs):
+    def __init__(self, scenario: Scenario, rng: np.random.RandomState = None, method="drop", scaling="var", **kwargs):
         types, bounds = get_types(scenario.cs, scenario.feature_array)
 
         if method == "drop":
@@ -19,7 +19,7 @@ class Hyperboost(SMAC):
             super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
         elif method == "QRD":
             model = LightEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
-                             seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM)
+                             seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM, scaling=scaling)
             acquisition_function = Direct(model=model)
             super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False,
                              acquisition_function=acquisition_function, **kwargs)

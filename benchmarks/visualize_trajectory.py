@@ -10,11 +10,10 @@ from scipy.stats import rankdata
 from benchmarks import config
 
 # Settings
-from benchmarks.combine_results import combine_all
-
+plt.style.use("seaborn")
 dir = "."
 in_progress = False
-name = "Adaboost"
+name = "RandomForest"
 
 
 def matches(filename):
@@ -109,23 +108,23 @@ def mean_of_datasets(mean_runs):
 
 
 if __name__ == "__main__":
-    r = combine_all({"dir": "LightQR", "name": "DecisionTree-stoch"},
-                    {"dir": ".", "name": "DecisionTree-stoch"},
-                    ["hyperboost-qrd"])
-    r = {seed: mean_of_runs(i) for seed, i in r.items()}
+    # r = combine_all({"dir": "LightQR", "name": "RandomForest"},
+    #                 {"dir": ".", "name": "RandomForest"},
+    #                 ["smac", "hyperboost-var", "hyperboost-drop"])
+    # r = {seed: mean_of_runs(i) for seed, i in r.items()}
     # r = {seed: rank_against(i) for seed, i in r.items()}
-    r = {seed: mean_of_datasets(i) for seed, i in r.items()}
-    results = r
+    # r = {seed: mean_of_datasets(i) for seed, i in r.items()}
+    # results = r
 
-    # results = {}
-    # for file in files:
-    #     seed = re.findall(r"[0-9]+", file)[0]
-    #     with open(os.path.join(dir, file), "r") as f:
-    #         data = json.load(f)
-    #         r = mean_of_runs(data)
-    #         r = rank_against(r, dual=False)
-    #         # r = mean_of_datasets(r)
-    #         results[seed] = r
+    results = {}
+    for file in files:
+        seed = re.findall(r"[0-9]+", file)[0]
+        with open(os.path.join(dir, file), "r") as f:
+            data = json.load(f)
+            r = mean_of_runs(data)
+            r = rank_against(r, dual=False)
+            # r = mean_of_datasets(r)
+            results[seed] = r
 
     results = [results[str(i)] for i in config.SEEDS if str(i) in results.keys()]
     if in_progress:
