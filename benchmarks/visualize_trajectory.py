@@ -13,7 +13,7 @@ from benchmarks import config
 plt.style.use("seaborn")
 dir = "."
 in_progress = False
-name = "RandomForest"
+name = "DecisionTree-stoch"
 
 
 def matches(filename):

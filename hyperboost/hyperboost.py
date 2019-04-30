@@ -15,7 +15,11 @@ class Hyperboost(SMAC):
 
         if method == "drop":
             model = LightDropEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
-                                 seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM)
+                                 seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM, boosting_type="gbdt")
+            super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
+        if method == "drop-dart":
+            model = LightDropEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
+                                 seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM, boosting_type="dart")
             super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
         elif method == "QRD":
             model = LightEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,

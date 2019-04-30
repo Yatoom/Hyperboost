@@ -8,9 +8,9 @@ from smac.epm.base_epm import AbstractEPM
 
 class LightDropEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components: float = None, seed=None):
+                 instance_features: np.ndarray = None, pca_components: float = None, seed=None, boosting_type="gbdt"):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
-        self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
+        self.light = LGBMRegressor(verbose=-1, boosting_type=boosting_type, min_child_samples=1, objective="quantile", num_leaves=8,
                                    alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
 
         # A KDTree to be constructed for measuring distance

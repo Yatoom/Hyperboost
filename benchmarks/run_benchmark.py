@@ -19,11 +19,11 @@ def write(*args, **kwargs):
 
 for state in config.SEEDS:
     rng = np.random.RandomState(state)
-    for model in [RandomForestSpace]:
+    for model in [DecisionTreeSpace, SVMSpace, RandomForestSpace]:
         records = {}
         for task_id in config.TASKS:
 
-            records[task_id] = {"smac": [], "hyperboost-var": [], "hyperboost-drop": []}
+            records[task_id] = {"smac": [], "hyperboost-var": [], "hyperboost-drop": [], "hyperboost-drop-dart": []}
 
             task = openml.tasks.get_task(task_id)
             X, y = task.get_X_and_y()
@@ -140,6 +140,31 @@ for state in config.SEEDS:
                 }
 
                 records[task_id]["hyperboost-drop"].append(hb_res)
+
+                ########################################################################################################
+
+                ########################################################################################################
+                # Hyperboost Drop DART
+                ########################################################################################################
+                hyperboost = Hyperboost(scenario=scenario, rng=rng, method="drop-dart", tae_runner=try_params)
+                hyper_start = time.time()
+                incumbent_hyperboost = hyperboost.optimize()
+                hyper_end = time.time()
+                print(f"Hyperboost time: {hyper_end - hyper_start}")
+                hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
+                                                                 y_train, X_test, y_test,
+                                                                 seeds=config.SEEDS)
+                write(f"\r[HYBO] train loss = {hb_train[-1]} | test loss = {hb_test[-1]}")
+
+                hb_res = {
+                    "loss_train": hb_train,
+                    "loss_test": hb_test,
+                    "total_time": hyperboost.stats.wallclock_time_used,
+                    "run_time": hyperboost.stats.ta_time_used,
+                    "n_configs": hyperboost.runhistory._n_id,
+                }
+
+                records[task_id]["hyperboost-drop-dart"].append(hb_res)
 
                 ########################################################################################################
 
