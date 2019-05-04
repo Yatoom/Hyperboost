@@ -42,12 +42,12 @@ class DecisionTreeSpace:
     # Hyper parameter space
     cs = ConfigurationSpace()
 
-    criterion = CategoricalHyperparameter("criterion", ["gini", "entropy"], default_value="gini")
-    max_depth = UniformIntegerHyperparameter('max_depth', 1, 20, default_value=20)
-    min_samples_split = UniformIntegerHyperparameter("min_samples_split", 2, 20, default_value=2)
-    min_samples_leaf = UniformIntegerHyperparameter("min_samples_leaf", 1, 20, default_value=1)
-
-    cs.add_hyperparameters([criterion, max_depth, min_samples_split, min_samples_leaf])
+    cs.add_hyperparameters([
+        CategoricalHyperparameter("criterion", ["gini", "entropy"], default_value="gini"),
+        UniformIntegerHyperparameter('max_depth', 1, 20, default_value=20),
+        UniformIntegerHyperparameter("min_samples_split", 2, 20, default_value=2),
+        UniformIntegerHyperparameter("min_samples_leaf", 1, 20, default_value=1)
+    ])
 
     @staticmethod
     def from_cfg(random_state=None, **cfg):

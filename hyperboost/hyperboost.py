@@ -1,6 +1,7 @@
 import numpy as np
 
 from hyperboost.direct import Direct, DirectNoDistance
+from hyperboost.lightcombo import LightCombo
 from hyperboost.lightdropepm import LightDropEPM
 from hyperboost.lightepm import LightEPM
 from smac.facade.smac_facade import SMAC
@@ -17,9 +18,13 @@ class Hyperboost(SMAC):
             model = LightDropEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
                                  seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM, boosting_type="gbdt")
             super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
-        if method == "drop-dart":
+        elif method == "drop-dart":
             model = LightDropEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
                                  seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM, boosting_type="dart")
+            super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
+        elif method == "combo":
+            model = LightCombo(types=types, bounds=bounds, instance_features=scenario.feature_array,
+                                 seed=rng.randint(MAXINT), pca_components=scenario.PCA_DIM)
             super().__init__(scenario=scenario, rng=rng, model=model, use_pynisher=False, **kwargs)
         elif method == "QRD":
             model = LightEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,

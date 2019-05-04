@@ -2,19 +2,17 @@ import typing
 
 import numpy as np
 from lightgbm import LGBMRegressor
-from scipy.spatial import cKDTree
+from scipy.spatial.ckdtree import cKDTree
 
 from smac.epm.base_epm import AbstractEPM
 
 
-class LightEPM(AbstractEPM):
+class LightCombo(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components: float = None, seed=None, scaling="var"):
+                 instance_features: np.ndarray = None, pca_components: float = None, seed=None):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
-        self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
-                                   alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
-
-        self.scaling = scaling
+        self.light = LGBMRegressor(verbose=-1, min_child_samples=1, num_leaves=8,
+                                   min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -61,29 +59,43 @@ class LightEPM(AbstractEPM):
         # Zeros returned in case model was not fitted
         loss = np.zeros(X.shape[0])
 
+        dist, ind = self.kdtree.query(self.transform(X), k=1)
+        distance = dist.reshape(-1) / self.max_distance
+
         # Variance only returned for compatibility
-        closeness = np.zeros(X.shape[0])
+        sigma = np.zeros(X.shape[0])
 
         # Model not fitted
         if self.light._n_features is None:
-            return loss, closeness
+            return loss, sigma
         else:
             loss = self.light.predict(X)
-            dist, ind = self.kdtree.query(self.transform(X), k=1, p=1)
+            sigma = self._get_uncertainty(self.light, X)
 
-            if self.scaling == "var":
-                scale = np.var(self.X)
-            elif self.scaling == "std":
-                scale = np.std(self.X)
-            else:
-                scale = 1
+        loss = loss - distance * sigma
 
-            unscaled_dist = dist.reshape(-1) / self.max_distance
-            # loss[unscaled_dist == 0] = 1
-            dist = unscaled_dist * scale
-            closeness = 1 - dist
+        return loss, sigma
 
-        return loss, closeness
+    @staticmethod
+    def _get_uncertainty(lgbm, data, fix_trees=0, drop_trees=0.5):
+        num_trees = lgbm._Booster.num_trees()
+        fixed_trees = int(fix_trees * num_trees)
+        dropped_trees = int((num_trees - fixed_trees) * drop_trees)
+        remaining_trees = num_trees - dropped_trees
+        all_predictions = []
+
+        for _ in range(5):
+            shuffled = lgbm._Booster.shuffle_models(start_iteration=fixed_trees)
+            predictions = shuffled.predict(data, num_iteration=remaining_trees)
+            all_predictions.append(predictions)
+
+        return np.var(all_predictions, axis=0)
+
+    @staticmethod
+    def one_hot_vector(length, indicator):
+        result = np.zeros(length)
+        result[indicator] = 1
+        return result
 
     def transform(self, X):
         if not self.contains_nominal:
@@ -103,9 +115,3 @@ class LightEPM(AbstractEPM):
             result.append(r)
 
         return np.array(result)
-
-    @staticmethod
-    def one_hot_vector(length, indicator):
-        result = np.zeros(length)
-        result[indicator] = 1
-        return result

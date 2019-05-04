@@ -10,8 +10,9 @@ class LightDropEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
                  instance_features: np.ndarray = None, pca_components: float = None, seed=None, boosting_type="gbdt"):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
-        self.light = LGBMRegressor(verbose=-1, boosting_type=boosting_type, min_child_samples=1, objective="quantile", num_leaves=8,
-                                   alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
+        self.light = LGBMRegressor(verbose=-1, boosting_type="rf", min_child_samples=1, num_leaves=32,
+                                   min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed,
+                                   subsample_freq=1, subsample=0.66)
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -64,24 +65,27 @@ class LightDropEPM(AbstractEPM):
             return loss, sigma
         else:
             loss = self.light.predict(X)
+            # individual = self._get_individual_predictions(self.light, X)
             sigma = self._get_uncertainty(self.light, X)
 
         return loss, sigma
 
     @staticmethod
-    def _get_uncertainty(lgbm, data, fix_trees=0, drop_trees=0.5):
+    def _get_uncertainty(lgbm, data):
         num_trees = lgbm._Booster.num_trees()
-        fixed_trees = int(fix_trees * num_trees)
-        dropped_trees = int((num_trees - fixed_trees) * drop_trees)
-        remaining_trees = num_trees - dropped_trees
-        all_predictions = []
 
+        all_predictions = []
         for _ in range(5):
-            shuffled = lgbm._Booster.shuffle_models(start_iteration=fixed_trees)
-            predictions = shuffled.predict(data, num_iteration=remaining_trees)
+            shuffled = lgbm._Booster.shuffle_models(start_iteration=0)
+            predictions = shuffled.predict(data, int(num_trees/2))
             all_predictions.append(predictions)
 
-        return np.std(all_predictions, axis=0)
+        return np.var(all_predictions, axis=0)
+
+    @staticmethod
+    def _get_individual_predictions(lgbm, data):
+        predictions = lgbm.predict(data, pred_leaf=True)
+        return [[lgbm._Booster.get_leaf_output(i, leaf) for i, leaf in enumerate(i_preds)] for i_preds in predictions]
 
     @staticmethod
     def one_hot_vector(length, indicator):
