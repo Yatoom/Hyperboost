@@ -157,5 +157,5 @@ class SVMSpace:
 
     @staticmethod
     def from_cfg(random_state=None, **cfg):
-        return SVMSpace.model(penalty="l2", loss="squared_hing", dual=False, multi_class="ovr", fit_intercept=True,
+        return SVMSpace.model(penalty="l2", loss="squared_hinge", dual=False, multi_class="ovr", fit_intercept=True,
                               intercept_scaling=1, **cfg)
