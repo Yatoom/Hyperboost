@@ -3,6 +3,7 @@ import typing
 import numpy as np
 from lightgbm import LGBMRegressor
 from scipy.spatial import cKDTree
+from scipy.stats import norm
 from sklearn.exceptions import NotFittedError
 
 from smac.epm.base_epm import AbstractEPM
@@ -71,17 +72,21 @@ class LightEPMEI(AbstractEPM):
 
         # Calculate statistics
         y_max = np.max(self.pos_y)
-        y_var = np.var(self.pos_y)
+        y_std = np.std(self.pos_y)
 
         # Normalize distance
-        dist = dist.reshape(-1) / self.max_distance * y_var
+        dist = dist.reshape(-1) / self.max_distance * y_std
 
         # Determine uncertainty values
-        aleatory = q_val - neighbor_score
-        epistemic = dist * neighbor_score / y_max
-        std = (aleatory + epistemic) / 2
+        aleatory = np.maximum(0, q_val - neighbor_score)
+        epistemic = dist
+        var = aleatory * epistemic
 
-        return 1 - mean, std
+        # aleatory = q_val - neighbor_score
+        # epistemic = dist * neighbor_score / y_max
+        # std = (aleatory + epistemic) / 2
+
+        return 1 - mean, var
 
     def transform(self, X):
         if not self.contains_nominal:
