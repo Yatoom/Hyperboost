@@ -71,13 +71,7 @@ class LightEPM(AbstractEPM):
             loss = self.light.predict(X)
             dist, ind = self.kdtree.query(self.transform(X), k=1, p=1)
 
-            if self.scaling == "var":
-                scale = np.var(self.X)
-            elif self.scaling == "std":
-                scale = np.std(self.X)
-            else:
-                scale = 1
-
+            scale = np.var(self.y)
             unscaled_dist = dist.reshape(-1) / self.max_distance
             # loss[unscaled_dist == 0] = 1
             dist = unscaled_dist * scale

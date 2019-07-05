@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from benchmark_visualize.util import load, mean_of_runs, mean_of_datasets, rename
 
 plt.style.use("seaborn")
-filename = "../benchmarks/new-resuls-RandomForest-2268061101.json"
+filename = "../benchmarks/NEW-RandomForest-2268061101.json"
 data = load(filename)
 
 r = mean_of_runs(data)

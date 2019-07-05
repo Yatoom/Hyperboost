@@ -4,9 +4,12 @@ import os
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit, cross_val_score
+
 from smac.scenario.scenario import Scenario
 
-SEEDS = [2268061101, 2519249986, 338403738] # 149713947, 523328522, 116041286, 496819236, 858316427, 272173521, 993691844
+# SEEDS = [338403738]
+SEEDS = [2268061101, 2519249986,
+         338403738]  # 149713947, 523328522, 116041286, 496819236, 858316427, 272173521, 993691844
 NUM_ITER = 250
 TASKS = [125920, 49, 146819, 29, 15, 3913, 3, 10101, 9971, 146818, 3917, 37, 3918, 14954, 9946, 146820, 3021, 31, 10093,
          3902, 3903, 9952, 9957, 167141, 14952, 9978, 3904, 43, 219, 14965, 7592]
@@ -24,7 +27,6 @@ def get_scenario(cs, num_iterations, deterministic):
 
 
 def create_smac_runner(model, X, y, cv, fit_params=None):
-
     if fit_params is None:
         fit_params = {}
 
@@ -82,7 +84,7 @@ def validate_model(model, best_config, X_train, y_train, X_test, y_test, seeds):
 
 
 def store_json(data, name, trial=None):
-    filename = f"results-{name}-{trial}.json"
+    filename = f"NEW3-{name}-{trial}.json"
 
     exists = os.path.isfile(filename)
     all_data = {}
@@ -94,3 +96,22 @@ def store_json(data, name, trial=None):
     with open(filename, 'w') as file:
         # print(all_data)
         json.dump(all_data, file, indent=4)
+
+    with open(filename, "r") as file:
+        try:
+            json.load(file, object_pairs_hook=dict_raise_on_duplicates)
+        except ValueError:
+            print()
+
+        # dict_raise_on_duplicates(json.load(file))
+
+
+def dict_raise_on_duplicates(ordered_pairs):
+    """Reject duplicate keys."""
+    d = {}
+    for k, v in ordered_pairs:
+        if k in d:
+            raise ValueError("duplicate key: %r" % (k,))
+        else:
+            d[k] = v
+    return d

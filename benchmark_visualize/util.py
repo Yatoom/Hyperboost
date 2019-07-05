@@ -22,6 +22,35 @@ def rename(i):
     return name
 
 
+def combine_two_dicts(original, additional, keys):
+    result = original
+    for key in keys:
+        result = {i: dict(j, **{key: additional[i][key] if key in additional[i] else None}) for i, j in result.items()
+                  if i in additional.keys()}
+    return result
+
+
+def dict_raise_on_duplicates(ordered_pairs):
+    """Reject duplicate keys."""
+    d = {}
+    for k, v in ordered_pairs:
+        if k in d:
+            raise ValueError("duplicate key: %r" % (k,))
+        else:
+            d[k] = v
+    return d
+
+
+def combine_two_files(original, additional, keys):
+    with open(original, "r") as f:
+        original = json.load(f, object_pairs_hook=dict_raise_on_duplicates)
+    with open(additional, "r") as f:
+        additional = json.load(f, object_pairs_hook=dict_raise_on_duplicates)
+    result = combine_two_dicts(original, additional, keys=keys)
+    # result = {i: dict(j, **{key: additional[i][key]}) for i, j in original.items()}
+    return result
+
+
 def mean_of_runs(data, keep_runs=None):
     result = {}
     for task, values in data.items():

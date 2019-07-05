@@ -80,7 +80,12 @@ class LightEPMEI(AbstractEPM):
         # Determine uncertainty values
         aleatory = np.maximum(0, q_val - neighbor_score)
         epistemic = dist
-        var = aleatory * epistemic
+        # var = aleatory * epistemic
+        # std = aleatory * epistemic + epistemic**2
+
+        var = (np.sqrt(aleatory * epistemic) + epistemic) ** 2
+        # OR
+        # var = aleatory * epistemic + epistemic ** 2
 
         # aleatory = q_val - neighbor_score
         # epistemic = dist * neighbor_score / y_max

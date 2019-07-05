@@ -2,6 +2,8 @@ import json
 import os
 import re
 
+from benchmarks.config import dict_raise_on_duplicates
+
 
 def combine_two_dicts(original, additional, keys):
     result = original
@@ -12,9 +14,9 @@ def combine_two_dicts(original, additional, keys):
 
 def combine_two_files(original, additional, keys):
     with open(original, "r") as f:
-        original = json.load(f)
+        original = json.load(f, object_pairs_hook=dict_raise_on_duplicates)
     with open(additional, "r") as f:
-        additional = json.load(f)
+        additional = json.load(f, object_pairs_hook=dict_raise_on_duplicates)
     result = combine_two_dicts(original, additional, keys=keys)
     # result = {i: dict(j, **{key: additional[i][key]}) for i, j in original.items()}
     return result
