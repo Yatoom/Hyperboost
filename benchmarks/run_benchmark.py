@@ -19,12 +19,14 @@ def write(*args, **kwargs):
 
 for state in config.SEEDS:
     rng = np.random.RandomState(state)
-    for model in [DecisionTreeSpace, RandomForestSpace, SVMSpace]:
+    for model in [RandomForestSpace, DecisionTreeSpace, SVMSpace]:
         records = {}
         for task_id in config.TASKS:
 
+            str_task_id = str(task_id)
+
             # records[task_id] = {"smac": [], "hyperboost-drop": [], "hyperboost-combo": [], "hyperboost-var": []}
-            records[task_id] = {"random_2x": []}
+            records[str_task_id] = {"hyperboost-qrd-correct": []}
 
             task = openml.tasks.get_task(task_id)
             X, y = task.get_X_and_y()
@@ -48,35 +50,35 @@ for state in config.SEEDS:
                 ########################################################################################################
                 # Random
                 ########################################################################################################
-                SPEED = 2
-                best_loss = 1
-                last_test_loss = None
-                train_trajectory = []
-                test_trajectory = []
-                running_time = 0
-                for i in range(config.NUM_ITER):
-                    start = time.time()
-                    configs = [model.cs.sample_configuration() for _ in range(SPEED)]
-                    losses = [try_params(cfg) for cfg in configs]
-                    best = np.argmin(losses)
-                    end = time.time()
-                    running_time += end - start
-                    if losses[best] < best_loss:
-                        best_loss = losses[best]
-                        test_loss, test_std = config.validate_model(model, configs[best], X_train, y_train, X_test, y_test, config.SEEDS)
-                        last_test_loss = test_loss
-                    test_trajectory.append(last_test_loss)
-                    train_trajectory.append(best_loss)
-
-                smac_res = {
-                    "loss_train": train_trajectory,
-                    "loss_test": test_trajectory,
-                    "total_time": running_time / SPEED,
-                    "run_time": running_time,
-                    "n_configs": config.NUM_ITER * SPEED,
-                }
-                records[task_id][f"random_{SPEED}x"].append(smac_res)
-                print()
+                # SPEED = 2
+                # best_loss = 1
+                # last_test_loss = None
+                # train_trajectory = []
+                # test_trajectory = []
+                # running_time = 0
+                # for i in range(config.NUM_ITER):
+                #     start = time.time()
+                #     configs = [model.cs.sample_configuration() for _ in range(SPEED)]
+                #     losses = [try_params(cfg) for cfg in configs]
+                #     best = np.argmin(losses)
+                #     end = time.time()
+                #     running_time += end - start
+                #     if losses[best] < best_loss:
+                #         best_loss = losses[best]
+                #         test_loss, test_std = config.validate_model(model, configs[best], X_train, y_train, X_test, y_test, config.SEEDS)
+                #         last_test_loss = test_loss
+                #     test_trajectory.append(last_test_loss)
+                #     train_trajectory.append(best_loss)
+                #
+                # smac_res = {
+                #     "loss_train": train_trajectory,
+                #     "loss_test": test_trajectory,
+                #     "total_time": running_time / SPEED,
+                #     "run_time": running_time,
+                #     "n_configs": config.NUM_ITER * SPEED,
+                # }
+                # records[task_id][f"random_{SPEED}x"].append(smac_res)
+                # print()
 
 
 
@@ -99,18 +101,18 @@ for state in config.SEEDS:
                 #     "run_time": smac.stats.ta_time_used,
                 #     "n_configs": smac.runhistory._n_id,
                 # }
-                # records[task_id]["smac"].append(smac_res)
+                # records[str_task_id]["smac"].append(smac_res)
 
                 # ########################################################################################################
 
-                # ########################################################################################################
-                # # Hyperboost QR
-                # ########################################################################################################
-                # hyperboost = Hyperboost(scenario=scenario, rng=rng, method="QR", tae_runner=try_params)
+                ########################################################################################################
+                # Hyperboost With Std
+                ########################################################################################################
+                # hyperboost = Hyperboost(scenario=scenario, rng=rng, method="skopt", tae_runner=try_params)
                 # hyper_start = time.time()
                 # incumbent_hyperboost = hyperboost.optimize()
                 # hyper_end = time.time()
-                # print(f"Hyperboost time: {hyper_end - hyper_start}")
+                # print(f"HyperboostWithStd time: {hyper_end - hyper_start}")
                 # hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
                 #                                                  y_train, X_test, y_test,
                 #                                                  seeds=config.SEEDS)
@@ -124,8 +126,55 @@ for state in config.SEEDS:
                 #     "n_configs": hyperboost.runhistory._n_id,
                 # }
                 #
-                # records[task_id]["hyperboost-qr"].append(hb_res)
+                # records[task_id]["hyperboost-std"].append(hb_res)
+
+                ########################################################################################################
+                # Hyperboost EI
+                ########################################################################################################
+
+                # hyperboost = Hyperboost(scenario=scenario, rng=rng, method="EI", tae_runner=try_params)
+                # hyper_start = time.time()
+                # incumbent_hyperboost = hyperboost.optimize()
+                # hyper_end = time.time()
+                # print(f"HyperboostEI time: {hyper_end - hyper_start}")
+                # hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
+                #                                                  y_train, X_test, y_test,
+                #                                                  seeds=config.SEEDS)
+                # write(f"\r[HVAR] train loss = {hb_train[-1]} | test loss = {hb_test[-1]} | config = {incumbent_hyperboost._values}")
                 #
+                # hb_res = {
+                #     "loss_train": hb_train,
+                #     "loss_test": hb_test,
+                #     "total_time": hyperboost.stats.wallclock_time_used,
+                #     "run_time": hyperboost.stats.ta_time_used,
+                #     "n_configs": hyperboost.runhistory._n_id,
+                # }
+                #
+                # records[str_task_id][f"hyperboost-ei2"].append(hb_res)
+
+                ########################################################################################################
+                # Hyperboost QRD
+                ########################################################################################################
+                hyperboost = Hyperboost(scenario=scenario, rng=rng, method="QRD", tae_runner=try_params)
+                hyper_start = time.time()
+                incumbent_hyperboost = hyperboost.optimize()
+                hyper_end = time.time()
+                print(f"Hyperboost time: {hyper_end - hyper_start}")
+                hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
+                                                                 y_train, X_test, y_test,
+                                                                 seeds=config.SEEDS)
+                write(f"\r[HVAR] train loss = {hb_train[-1]} | test loss = {hb_test[-1]} | config = {incumbent_hyperboost._values}")
+
+                hb_res = {
+                    "loss_train": hb_train,
+                    "loss_test": hb_test,
+                    "total_time": hyperboost.stats.wallclock_time_used,
+                    "run_time": hyperboost.stats.ta_time_used,
+                    "n_configs": hyperboost.runhistory._n_id,
+                }
+
+                records[str_task_id][f"hyperboost-qrd-correct"].append(hb_res)
+
                 # ########################################################################################################
 
                 ########################################################################################################
@@ -153,28 +202,7 @@ for state in config.SEEDS:
 
                 ########################################################################################################
 
-                ########################################################################################################
-                # Hyperboost QRD
-                ########################################################################################################
-                # hyperboost = Hyperboost(scenario=scenario, rng=rng, method="QRD", tae_runner=try_params)
-                # hyper_start = time.time()
-                # incumbent_hyperboost = hyperboost.optimize()
-                # hyper_end = time.time()
-                # print(f"Hyperboost time: {hyper_end - hyper_start}")
-                # hb_train, hb_test = config.get_smac_trajectories(hyperboost, model, config.NUM_ITER, X_train,
-                #                                                  y_train, X_test, y_test,
-                #                                                  seeds=config.SEEDS)
-                # write(f"\r[HVAR] train loss = {hb_train[-1]} | test loss = {hb_test[-1]} | config = {incumbent_hyperboost._values}")
-                #
-                # hb_res = {
-                #     "loss_train": hb_train,
-                #     "loss_test": hb_test,
-                #     "total_time": hyperboost.stats.wallclock_time_used,
-                #     "run_time": hyperboost.stats.ta_time_used,
-                #     "n_configs": hyperboost.runhistory._n_id,
-                # }
-                #
-                # records[task_id][f"hyperboost-qrd"].append(hb_res)
+
 
                 ########################################################################################################
 
