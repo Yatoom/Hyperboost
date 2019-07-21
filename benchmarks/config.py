@@ -84,7 +84,7 @@ def validate_model(model, best_config, X_train, y_train, X_test, y_test, seeds):
 
 
 def store_json(data, name, trial=None):
-    filename = f"NEW3-{name}-{trial}.json"
+    filename = f"NEW4-{name}-{trial}.json"
 
     exists = os.path.isfile(filename)
     all_data = {}

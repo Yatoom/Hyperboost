@@ -44,7 +44,8 @@ class ROAR(SMAC):
                  initial_configurations: typing.List[Configuration]=None,
                  stats: Stats=None,
                  rng: np.random.RandomState=None,
-                 run_id: int=1):
+                 run_id: int=1,
+                 use_pynisher: bool = True):
         """
         Constructor
 
@@ -117,4 +118,5 @@ class ROAR(SMAC):
             rng=rng,
             run_id=run_id,
             acquisition_function_optimizer=rs,
+            use_pynisher=use_pynisher
         )
