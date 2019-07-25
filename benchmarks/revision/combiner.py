@@ -1,14 +1,19 @@
 import os
 import json
 
-prefixes = ["DEFAULT-", "PCA-", "x2-"]
+prefixes = ["DEFAULT-", "PCA-", "x2-", "EPS-", "EUCLID-", "NODIST-"]
+
 location = os.path.join(".")
 
 matched = {}
 
 for file in os.listdir(location):
 
+    if not any(file.startswith(prefix) for prefix in prefixes):
+        continue
+
     with open(os.path.join(location, file)) as f:
+        print(file)
         data = json.load(f)
 
     for p in prefixes:
@@ -18,8 +23,6 @@ for file in os.listdir(location):
         matched[file] = []
 
     matched[file].append(data)
-
-    print(file)
 
 for key in matched.keys():
 
