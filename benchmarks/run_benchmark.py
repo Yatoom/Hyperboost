@@ -28,7 +28,7 @@ for state in config.SEEDS:
             str_task_id = str(task_id)
 
             # records[task_id] = {"smac": [], "hyperboost-drop": [], "hyperboost-combo": [], "hyperboost-var": []}
-            records[str_task_id] = {"hyperboost-std-y-eps-1": []}
+            records[str_task_id] = {"hyperboost-std-y": [], "smac": []}
 
             task = openml.tasks.get_task(task_id)
             X, y = task.get_X_and_y()
@@ -196,7 +196,7 @@ for state in config.SEEDS:
                     "n_configs": hyperboost.runhistory._n_id,
                 }
 
-                records[str_task_id][f"hyperboost-std-y-eps-1"].append(hb_res)
+                records[str_task_id][f"hyperboost-std-y"].append(hb_res)
 
                 # ########################################################################################################
 

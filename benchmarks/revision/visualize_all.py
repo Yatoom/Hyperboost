@@ -7,7 +7,8 @@ import benchmark_visualize.util as util
 import matplotlib.pyplot as plt
 
 plt.style.use("seaborn")
-DIR = "."
+DIR = ".."
+PREFIX = "AVOID-"
 
 
 def rename(i):
@@ -26,7 +27,7 @@ def rename(i):
 
 grouped = {}
 for file in os.listdir(DIR):
-    if file.startswith("ALL-"):
+    if file.startswith(PREFIX):
         postfix = re.search(r"[0-9]+", file)[0]
         base = file.replace(f"-{postfix}", "")
         base = base.replace(".json", "")
@@ -56,7 +57,7 @@ for group in grouped.keys():  # SVM, DecisionTree, RandomForest
         mean_runs = util.mean_of_runs(grouped[group][seed], keep_runs=keep)
 
         # Taking the mean over all dataset: mean per method
-        grouped[group][seed] = util.rank_against(mean_runs)
+        grouped[group][seed] = util.mean_of_datasets(mean_runs)
 
     # Taking the mean over all seeds
     frames = [pd.DataFrame(i) for i in grouped[group]]
@@ -83,7 +84,7 @@ for group in grouped.keys():  # SVM, DecisionTree, RandomForest
         mean[i].plot()
         plt.fill_between(np.arange(mean[i].shape[0]), mean[i] - std[i], mean[i] + std[i], alpha=0.5)
     # plt.ylim(bottom=min_100, top=max_100)
-    plt.ylim(1, 4)
+    # plt.ylim(1, 4)
     plt.xlabel("Iteration")
     plt.ylabel("Ranking (lower is better)")
     plt.legend(renamed_columns)
