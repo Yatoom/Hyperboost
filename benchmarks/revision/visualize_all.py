@@ -65,7 +65,7 @@ for group in grouped.keys():  # SVM, DecisionTree, RandomForest
     std = pd.concat(frames).groupby(level=0).std().iloc[1:]
 
     # Visualize train
-    columns = [i for i in mean.columns if "mean_test" in i]
+    columns = [i for i in mean.columns if "mean_train" in i]
 
     max_100 = 0
     min_100 = 1
@@ -78,8 +78,8 @@ for group in grouped.keys():  # SVM, DecisionTree, RandomForest
         # if n in ["ROAR", "Hyperboost-PCA", "Hyperboost-EI"]:
         #     continue
 
-        max_100 = max(max_100, mean[i].iloc[50] + 2 * std[i].iloc[50])
-        min_100 = min(min_100, mean[i].iloc[247] - 2 * std[i].iloc[247])
+        # max_100 = max(max_100, mean[i].iloc[50] + 2 * std[i].iloc[50])
+        # min_100 = min(min_100, mean[i].iloc[247] - 2 * std[i].iloc[247])
         renamed_columns.append(n)
         mean[i].plot()
         plt.fill_between(np.arange(mean[i].shape[0]), mean[i] - std[i], mean[i] + std[i], alpha=0.5)
