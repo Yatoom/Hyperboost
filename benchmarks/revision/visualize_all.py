@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 plt.style.use("seaborn")
 DIR = ".."
-PREFIX = "AVOIDR-"
+PREFIX = "AVOID-"
 
 
 def rename(i):
@@ -44,7 +44,7 @@ for file in os.listdir(DIR):
 print(grouped.keys())
 
 runs = ["hyperboost-std-y", "smac", "roar", "hyperboost-ei2", "random_2x", "roar_2x", "hyperboost-pca-std-y"]
-keep = ["roar_2x", "smac", "hyperboost-std-y"]
+keep = ["random_2x", "roar_2x", "smac", "hyperboost-std-y"]
 # keep = ["smac", "hyperboost-std-y", "hyperboost-ei2"]
 # keep = ["smac", "hyperboost-std-y", "hyperboost-pca-std-y"]
 

@@ -28,7 +28,7 @@ for state in config.SEEDS:
             str_task_id = str(task_id)
 
             # records[task_id] = {"smac": [], "hyperboost-drop": [], "hyperboost-combo": [], "hyperboost-var": []}
-            records[str_task_id] = {"roar": [], "roar_2x": []}
+            records[str_task_id] = {"hyperboost-std-y-eps-1": []}
 
             task = openml.tasks.get_task(task_id)
             X, y = task.get_X_and_y()
@@ -107,23 +107,23 @@ for state in config.SEEDS:
                 ########################################################################################################
                 # ROAR
                 ########################################################################################################
-                roar = ROAR(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
-                roar_start = time.time()
-                incumbent_roar = roar.optimize()
-                roar_end = time.time()
-                print(f"ROAR time: {roar_end - roar_start}")
-                roar_train, roar_test = config.get_smac_trajectories(roar, model, config.NUM_ITER, X_train,
-                                                                     y_train, X_test, y_test,
-                                                                     seeds=config.SEEDS)
-                write(f"\r[ROAR] train loss = {roar_train[-1]} | test loss = {roar_test[-1]} | config = {incumbent_roar._values}")
-                roar_res = {
-                    "loss_train": roar_train,
-                    "loss_test": roar_test,
-                    "total_time": roar.stats.wallclock_time_used,
-                    "run_time": roar.stats.ta_time_used,
-                    "n_configs": roar.runhistory._n_id,
-                }
-                records[str_task_id]["roar"].append(roar_res)
+                # roar = ROAR(scenario=scenario, rng=rng, tae_runner=try_params, use_pynisher=False)
+                # roar_start = time.time()
+                # incumbent_roar = roar.optimize()
+                # roar_end = time.time()
+                # print(f"ROAR time: {roar_end - roar_start}")
+                # roar_train, roar_test = config.get_smac_trajectories(roar, model, config.NUM_ITER, X_train,
+                #                                                      y_train, X_test, y_test,
+                #                                                      seeds=config.SEEDS)
+                # write(f"\r[ROAR] train loss = {roar_train[-1]} | test loss = {roar_test[-1]} | config = {incumbent_roar._values}")
+                # roar_res = {
+                #     "loss_train": roar_train,
+                #     "loss_test": roar_test,
+                #     "total_time": roar.stats.wallclock_time_used,
+                #     "run_time": roar.stats.ta_time_used,
+                #     "n_configs": roar.runhistory._n_id,
+                # }
+                # records[str_task_id]["roar"].append(roar_res)
 
 
 
