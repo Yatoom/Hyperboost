@@ -3,18 +3,17 @@ import typing
 import numpy as np
 from lightgbm import LGBMRegressor
 from scipy.spatial import cKDTree
+from sklearn.decomposition import PCA
 
 from smac.epm.base_epm import AbstractEPM
 
 
 class LightEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components: float = None, seed=None, scaling="var"):
-        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
+                 instance_features: np.ndarray = None, pca_components: float = None, seed=None):
+        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
                                    alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
-
-        self.scaling = scaling
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -43,6 +42,13 @@ class LightEPM(AbstractEPM):
         # The maximum L1 distance between two points in hyperparameter space
         self.max_distance = sum(np.maximum(i, 1) for i in types)
 
+        self.pca_components = pca_components
+        if pca_components > 0:
+            self.pca = PCA(n_components=pca_components)
+        else:
+            self.pca = None
+
+
     def _train(self, X, y):
         X_ = X
         y_ = y
@@ -50,6 +56,8 @@ class LightEPM(AbstractEPM):
         self.X = X_
         self.y = y_
         self.X_transformed = self.transform(X)
+        if self.pca is not None:
+            self.X_transformed = self.pca.fit_transform(self.X_transformed)
         self.kdtree = cKDTree(self.X_transformed)
         self.inc = np.max(y_)
         n_samples = X_.shape[0]
@@ -69,7 +77,12 @@ class LightEPM(AbstractEPM):
             return loss, closeness
         else:
             loss = self.light.predict(X)
-            dist, ind = self.kdtree.query(self.transform(X), k=1, p=1)
+            X_transformed = self.transform(X)
+
+            if self.pca is not None:
+                X_transformed = self.pca.transform(X_transformed)
+
+            dist, ind = self.kdtree.query(X_transformed, k=1, p=1)
 
             scale = np.std(self.y)
             # print("var_y:", np.var(self.y), "var_x:", np.var(self.X))
