@@ -34,8 +34,8 @@ def create_smac_runner(model, X, y, cv, fit_params=None):
     def execute_from_cfg(cfg, seed=None):
         print(".", end="", flush=True)
         mdl = from_cfg(model, cfg, seed=seed)
-        # ss = ShuffleSplit(n_splits=cv, random_state=0, test_size=0.10, train_size=None)
-        ss = ShuffleSplit(n_splits=cv, test_size=0.10, train_size=None)
+        ss = ShuffleSplit(n_splits=cv, random_state=0, test_size=0.10, train_size=None)
+        # ss = ShuffleSplit(n_splits=cv, test_size=0.10, train_size=None)
         mdl.fit(X, y)
         acc = cross_val_score(mdl, X, y, cv=ss, n_jobs=-1, fit_params=fit_params)
         return 1 - np.mean(acc)
@@ -85,7 +85,7 @@ def validate_model(model, best_config, X_train, y_train, X_test, y_test, seeds):
 
 
 def store_json(data, name, trial=None):
-    filename = f"AVOID-{name}-{trial}.json"
+    filename = f"HPB-{name}-{trial}.json"
 
     exists = os.path.isfile(filename)
     all_data = {}

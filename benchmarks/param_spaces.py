@@ -5,6 +5,7 @@ from ConfigSpace.hyperparameters import CategoricalHyperparameter, Constant, UnP
 from lightgbm import LGBMClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import ExtraTreesClassifier, AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -25,12 +26,42 @@ class RandomForestSpace:
         UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
         # UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
         # UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
+        # reg_alpha and reg_lambda seem to work for both RF and GBDT
     ])
 
     @staticmethod
     def from_cfg(random_state=None, **cfg):
         return RandomForestSpace.model(n_estimators=100, subsample_freq=1, boosting_type="rf", verbose=-1, n_jobs=-1,
                                        random_state=random_state, **cfg)
+
+
+class MLPSpace:
+    # Properties
+    model = MLPClassifier
+    is_deterministic = False
+    name = "MLP"
+
+    cs = ConfigurationSpace()
+    cs.add_hyperparameters([
+        UniformIntegerHyperparameter("hidden_layer_sizes_1", 2 ** 5, 2 ** 11, default_value=100, log=True),
+        UniformIntegerHyperparameter("hidden_layer_sizes_2", 2 ** 5, 2 ** 11, default_value=100, log=True),
+        UniformIntegerHyperparameter("number_layers", 1, 2, default_value=1, log=True),
+        UniformFloatHyperparameter("alpha", 10 ** -7, 10 ** -4, log=True),
+        UniformFloatHyperparameter("momentum", 0.1, 0.9, log=True),
+    ])
+
+    @staticmethod
+    def from_cfg(random_state=None, **cfg):
+        if cfg['number_layers'] == 2:
+            layers = (cfg['hidden_layer_sizes_1'], cfg['hidden_layer_sizes_2'])
+        else:
+            layers = (cfg['hidden_layer_sizes_1'],)
+
+        del cfg['hidden_layer_sizes_1']
+        del cfg['hidden_layer_sizes_2']
+        del cfg['number_layers']
+
+        return MLPSpace.model(max_iter=200, activation="tanh", hidden_layer_sizes=layers, **cfg)
 
 
 class DecisionTreeSpace:
