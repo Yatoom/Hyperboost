@@ -43,25 +43,25 @@ class MLPSpace:
 
     cs = ConfigurationSpace()
     cs.add_hyperparameters([
-        UniformIntegerHyperparameter("hidden_layer_sizes_1", 2 ** 5, 2 ** 11, default_value=100, log=True),
-        UniformIntegerHyperparameter("hidden_layer_sizes_2", 2 ** 5, 2 ** 11, default_value=100, log=True),
-        UniformIntegerHyperparameter("number_layers", 1, 2, default_value=1, log=True),
-        UniformFloatHyperparameter("alpha", 10 ** -7, 10 ** -4, log=True),
-        UniformFloatHyperparameter("momentum", 0.1, 0.9, log=True),
+        UniformIntegerHyperparameter("hidden_layer_sizes_1", 2 ** 4, 2 ** 8, default_value=2 ** 4, log=True),
+        UniformIntegerHyperparameter("hidden_layer_sizes_2", 2 ** 4, 2 ** 8, default_value=2 ** 4, log=True),
+        CategoricalHyperparameter('number_layers', choices=[1, 2]),
+        UniformFloatHyperparameter("alpha", 10 ** -7, 10 ** -4, default_value=10 ** -4, log=True),
+        UniformFloatHyperparameter("momentum", 0.1, 0.9, default_value=0.9, log=True),
+        UniformFloatHyperparameter("learning_rate_init", 0.00001, 1.0, default_value= 0.001, log=True)
     ])
 
     @staticmethod
     def from_cfg(random_state=None, **cfg):
         if cfg['number_layers'] == 2:
-            layers = (cfg['hidden_layer_sizes_1'], cfg['hidden_layer_sizes_2'])
+            hidden_layer_sizes = (cfg['hidden_layer_sizes_1'], cfg['hidden_layer_sizes_2'])
         else:
-            layers = (cfg['hidden_layer_sizes_1'],)
-
-        del cfg['hidden_layer_sizes_1']
-        del cfg['hidden_layer_sizes_2']
-        del cfg['number_layers']
-
-        return MLPSpace.model(max_iter=200, activation="tanh", hidden_layer_sizes=layers, **cfg)
+            hidden_layer_sizes = (cfg['hidden_layer_sizes_1'],)
+        alpha = cfg["alpha"]
+        momentum = cfg['momentum']
+        print(cfg["number_layers"])
+        return MLPSpace.model(solver="adam", max_iter=200, activation="tanh", hidden_layer_sizes=hidden_layer_sizes,
+                              alpha=alpha, momentum=momentum, random_state=random_state, learning_rate="adaptive")
 
 
 class DecisionTreeSpace:
