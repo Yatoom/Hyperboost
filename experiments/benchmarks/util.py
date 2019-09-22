@@ -5,35 +5,33 @@ from copy import copy
 
 import numpy as np
 from ConfigSpace.configuration_space import ConfigurationSpace
-from sklearn.metrics import check_scoring, get_scorer
+from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_score
-
-from experiments.benchmarks.param_spaces import ParamSpace
 from smac.scenario.scenario import Scenario
+
+import experiments.benchmarks.config as cfgfile
+from experiments.benchmarks.param_spaces import ParamSpace
 
 
 def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = "quality", runcount_limit: int = 250,
-                    intens_min_chall: int = 2, maxR: int = 5, **kwargs) -> Scenario:
+                    intens_min_chall: int = 2, maxR: int = 5, output_dir="smac_output", **kwargs) -> Scenario:
     """
     Create a Scenario object
 
     Parameters
     ----------
+    output_dir: str
+        Specifies the output-directory for all emerging files, such as logging and results.
     maxR: int
         Maximum number of calls per configuration. Default: 2000.
-
     intens_min_chall: int
         Number of challengers to run against each other
-
     cs: ConfigurationSpace
         The configuration space to use within the scenario
-
     runcount_limit: int
         Maximum number of algorithm-calls during optimization. Default: inf
-
     run_obj: [‘runtime’, ‘quality’]
         Defines what metric to optimize. When optimizing runtime, cutoff_time is required as well.
-
     deterministic: bool
         Whether the target algorithm is
 
@@ -50,6 +48,7 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         "runcount_limit": runcount_limit,
         "intens_min_chall": intens_min_chall,
         "maxR": maxR,
+        "output_dir": output_dir,
         **kwargs
     })
 
@@ -85,7 +84,6 @@ def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv
 
     # Create the target algorithm tester
     def tat(cfg, seed=None):
-
         # Print a dot for every time the TAT runner is executed
         print(".", end="", flush=True)
 
@@ -168,7 +166,7 @@ def get_smac_trajectories(smac, target_algorithm_evaluator, speed=1):
         A historical line of the test performance
     """
 
-    num_iterations = smac.stats._n_calls_of_intensify + 1
+    num_iterations = cfgfile.NUM_ITER
     train_trajectory = np.zeros(num_iterations * speed)
     test_trajectory = np.zeros(num_iterations * speed)
 
@@ -230,6 +228,7 @@ def store_json(data, name, prefix="benchmark", trial=None):
 
 def run_smac_based_optimizer(hpo, tae, speed=1):
     hpo = copy(hpo)
+    hpo.solver.intensifier.tae_runner.use_pynisher = False
     hpo.scenario.ta_run_limit = hpo.scenario.ta_run_limit * speed
 
     t0 = time.time()

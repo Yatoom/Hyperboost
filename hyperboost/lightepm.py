@@ -10,9 +10,10 @@ from smac.epm.base_epm import AbstractEPM
 
 class LightEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components_: float = None, seed=None):
+                 instance_features: np.ndarray = None, pca_components_: float = None, seed=None, configspace=None):
 
-        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None)
+        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None,
+                         configspace=configspace, seed=seed)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
                                    alpha=0.03, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
 

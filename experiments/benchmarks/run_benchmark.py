@@ -11,7 +11,7 @@ from experiments.benchmarks.param_spaces import RandomForestSpace
 from experiments.benchmarks.util import write_output, run_smac_based_optimizer
 from hyperboost.hyperboost import Hyperboost
 from smac.facade.roar_facade import ROAR
-from smac.facade.smac_facade import SMAC
+from smac.facade.smac_hpo_facade import SMAC4HPO
 
 # Options
 ml_algorithms = [RandomForestSpace()]
@@ -44,7 +44,7 @@ for hpo_state in config.SEEDS:
                                             runcount_limit=config.NUM_ITER)
 
             # Log to output
-            write_output(f"Task {task_id}")
+            write_output(f"Task {task_id}\n")
 
             for train_index, test_index in outer_loop.split(X):
                 X_train, y_train = X[train_index], y[train_index]
@@ -68,9 +68,10 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 # Hyperboost
                 ########################################################################################################
+                name = "hyperboost"
+                print(f"\n[{name}] ")
                 hpo = Hyperboost(scenario=scenario, rng=rng, tae_runner=tat, pca_components=2)
                 hpo_result, info = run_smac_based_optimizer(hpo, tae)
-                name = "hyperboost"
 
                 write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
                              f"test_loss={info['last_test_loss']}\n")
@@ -80,9 +81,10 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 # SMAC
                 ########################################################################################################
-                hpo = SMAC(scenario=scenario, rng=rng, tae_runner=tat, use_pynisher=False)
-                hpo_result, info = run_smac_based_optimizer(hpo, tae)
                 name = "smac"
+                print(f"\n[{name}] ")
+                hpo = SMAC4HPO(scenario=scenario, rng=rng, tae_runner=tat)
+                hpo_result, info = run_smac_based_optimizer(hpo, tae)
 
                 write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
                              f"test_loss={info['last_test_loss']}\n")
@@ -92,9 +94,10 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 # ROAR x2
                 ########################################################################################################
-                hpo = ROAR(scenario=scenario, rng=rng, tae_runner=tat, use_pynisher=False)
-                hpo_result, info = run_smac_based_optimizer(hpo, tae, speed=2)
                 name = "roar_x2"
+                print(f"\n[{name}] ")
+                hpo = ROAR(scenario=scenario, rng=rng, tae_runner=tat)
+                hpo_result, info = run_smac_based_optimizer(hpo, tae, speed=2)
 
                 write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
                              f"test_loss={info['last_test_loss']}\n")
@@ -104,7 +107,9 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 # Random
                 ########################################################################################################
-                SPEED = 2
+                name = "random_x2"
+                print(f"\n[{name}] ")
+                speed = 2
                 best_loss = 1
                 last_test_loss = None
                 train_trajectory = []
@@ -112,15 +117,14 @@ for hpo_state in config.SEEDS:
                 running_time = 0
                 for i in range(config.NUM_ITER):
                     start = time.time()
-                    configs = [ml_algorithm.cs.sample_configuration() for _ in range(SPEED)]
+                    configs = [ml_algorithm.configuration_space.sample_configuration() for _ in range(speed)]
                     losses = [tat(cfg) for cfg in configs]
                     best = np.argmin(losses)
                     end = time.time()
                     running_time += end - start
                     if losses[best] < best_loss:
                         best_loss = losses[best]
-                        test_loss, test_std = config.validate_model(ml_algorithm, configs[best], X_train, y_train,
-                                                                    X_test, y_test, config.SEEDS)
+                        test_loss, test_std = tae(configs[best])
                         last_test_loss = test_loss
                     test_trajectory.append(last_test_loss)
                     train_trajectory.append(best_loss)
@@ -128,14 +132,16 @@ for hpo_state in config.SEEDS:
                 hpo_result = {
                     "loss_train": train_trajectory,
                     "loss_test": test_trajectory,
-                    "total_time": running_time / SPEED,
+                    "total_time": running_time / speed,
                     "run_time": running_time,
-                    "n_configs": config.NUM_ITER * SPEED,
+                    "n_configs": config.NUM_ITER * speed,
                 }
 
                 records = util.add_record(records, task_id, name, hpo_result)
 
                 ########################################################################################################
 
+                write_output("\n")
+
             # Store results
-            util.store_json(records, ml_algorithm.name, hpo_state)
+            util.store_json(records, name=ml_algorithm.name, trial=hpo_state)
