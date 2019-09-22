@@ -10,10 +10,11 @@ from smac.epm.base_epm import AbstractEPM
 
 class LightEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components: float = None, seed=None):
+                 instance_features: np.ndarray = None, pca_components_: float = None, seed=None):
+
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
-                                   alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
+                                   alpha=0.03, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -40,14 +41,13 @@ class LightEPM(AbstractEPM):
         self.categories = types[self.selection]
 
         # The maximum L1 distance between two points in hyperparameter space
-        self.max_distance = sum(np.maximum(i, 1) for i in types)
+        self.max_distance = sum(np.maximum(i, 1) for i in types) ** 2
 
-        self.pca_components = pca_components
-        if pca_components > 0:
-            self.pca = PCA(n_components=pca_components)
+        self.pca_components_ = pca_components_
+        if pca_components_ is not None and pca_components_ > 0:
+            self.pca_ = PCA(n_components=pca_components_)
         else:
-            self.pca = None
-
+            self.pca_ = None
 
     def _train(self, X, y):
         X_ = X
@@ -56,13 +56,16 @@ class LightEPM(AbstractEPM):
         self.X = X_
         self.y = y_
         self.X_transformed = self.transform(X)
-        if self.pca is not None:
-            self.X_transformed = self.pca.fit_transform(self.X_transformed)
-        self.kdtree = cKDTree(self.X_transformed)
         self.inc = np.max(y_)
         n_samples = X_.shape[0]
+
         if n_samples >= 2:
             self.light.fit(X_, y_.flatten())
+
+            if self.pca_ is not None and self.X_transformed.shape[1] > self.pca_components_:
+                self.X_transformed = self.pca_.fit_transform(self.X_transformed)
+
+        self.kdtree = cKDTree(self.X_transformed)
 
     def _predict(self, X):
 
@@ -79,10 +82,11 @@ class LightEPM(AbstractEPM):
             loss = self.light.predict(X)
             X_transformed = self.transform(X)
 
-            if self.pca is not None:
-                X_transformed = self.pca.transform(X_transformed)
+            if self.pca_ is not None and X_transformed.shape[1] > self.pca_components_ and \
+                    self.X_transformed.shape[0] >= 2:
+                X_transformed = self.pca_.transform(X_transformed)
 
-            dist, ind = self.kdtree.query(X_transformed, k=1, p=1)
+            dist, ind = self.kdtree.query(X_transformed, k=1, p=2)
 
             scale = np.std(self.y)
             # print("var_y:", np.var(self.y), "var_x:", np.var(self.X))
