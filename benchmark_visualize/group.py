@@ -77,7 +77,7 @@ def collect_combine_prefix(folder, prefix):
     """
     matches = collect_filenames(folder, prefix)
     layout = group_by_prefix(matches)
-    multi_data = load_layout(layout, FOLDER)
+    multi_data = load_layout(layout, folder)
     result = prefix_data(multi_data)
     return result
 
