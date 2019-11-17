@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import rankdata
 
+from benchmark_visualize.util import mean_of_runs, rank_against
 from benchmarks import config
 
 # Settings

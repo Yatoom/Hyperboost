@@ -48,7 +48,7 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         "runcount_limit": runcount_limit,
         "intens_min_chall": intens_min_chall,
         "maxR": maxR,
-        "output_dir": output_dir,
+        # "output_dir": output_dir,
         **kwargs
     })
 
@@ -211,6 +211,7 @@ def store_json(data, name, prefix="benchmark", trial=None):
 
     filename = f"{prefix}-{name}-{trial}.json"
     exists = os.path.isfile(filename)
+    print(f"Stored results in {filename} ({'existing' if exists else 'new'})")
 
     # Initialize dictionary
     all_data = {}

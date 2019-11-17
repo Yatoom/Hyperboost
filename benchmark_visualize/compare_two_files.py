@@ -7,18 +7,21 @@ from benchmark_visualize.util import load, mean_of_runs, mean_of_datasets, renam
 
 plt.style.use("seaborn")
 
-data1 = load("../benchmarks/NEW-RandomForest-2268061101.json")
-data2 = load("../benchmarks/NEW2-RandomForest-2268061101.json")
-data3 = load("../benchmarks/NEW3-RandomForest-2268061101.json")
-data12 = combine_two_dicts(data1, data2, keys=["hyperboost-ei2"])
-data123 = combine_two_dicts(data12, data3, keys=["hyperboost-qrd-correct"])
+data1 = load("../benchmarks/HPB-GBM-2268061101.json")
+data2 = load("../benchmarks/HPB-005-GBM-2268061101.json")
+# data3 = load("../benchmarks/NEW3-RandomForest-2268061101.json")
+data12 = combine_two_dicts(data1, data2, keys=["hyperboost-pca"])
+# data123 = combine_two_dicts(data12, data3, keys=["hyperboost-qrd-correct"])
+
+excluded = "hyperboost"
+data12 = {task_id: {method: values for method, values in results.items() if method not in excluded} for task_id, results in data12.items()}
 
 # data = combine_two_files(
 #     original="../benchmarks/NEW-RandomForest-2268061101.json",
 #     additional="../benchmarks/NEW3-RandomForest-2268061101.json",
 #     keys=["hyperboost-qrd-correct"])
 
-r = mean_of_runs(data123)
+r = mean_of_runs(data12)
 r = mean_of_datasets(r)
 
 train = {rename(k): v for k, v in r.items() if "mean_train" in k}

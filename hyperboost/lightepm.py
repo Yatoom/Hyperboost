@@ -1,3 +1,5 @@
+import time
+import traceback
 import typing
 
 import numpy as np
@@ -10,12 +12,12 @@ from smac.epm.base_epm import AbstractEPM
 
 class LightEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
-                 instance_features: np.ndarray = None, pca_components_: float = None, seed=None, configspace=None):
+                 instance_features: np.ndarray = None, pca_components=None, pca_components_: float = None, seed=None, configspace=None):
 
-        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None,
+        super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components,
                          configspace=configspace, seed=seed)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
-                                   alpha=0.03, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
+                                   alpha=0.03, min_data_in_bin=1, n_jobs=1, n_estimators=100, random_state=seed)
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
@@ -49,8 +51,12 @@ class LightEPM(AbstractEPM):
             self.pca_ = PCA(n_components=pca_components_)
         else:
             self.pca_ = None
+        print("##Init")
 
     def _train(self, X, y):
+        t0 = time.time()
+        # print("##Train")
+        # traceback.print_stack()
         X_ = X
         y_ = y
 
@@ -67,6 +73,9 @@ class LightEPM(AbstractEPM):
                 self.X_transformed = self.pca_.fit_transform(self.X_transformed)
 
         self.kdtree = cKDTree(self.X_transformed)
+        t1 = time.time()
+        print((t1 - t0) * 1000)
+
 
     def _predict(self, X):
 
@@ -96,6 +105,7 @@ class LightEPM(AbstractEPM):
             dist = unscaled_dist * scale
             closeness = 1 - dist
 
+        # print("##predict")
         return loss, closeness
 
     def transform(self, X):

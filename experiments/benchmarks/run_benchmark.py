@@ -5,13 +5,15 @@ import openml
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import KFold, ShuffleSplit
+from SMAC3.smac.optimizer.ei_optimization import InterleavedLocalAndRandomSearch
 
 from experiments.benchmarks import config, util
 from experiments.benchmarks.param_spaces import RandomForestSpace
 from experiments.benchmarks.util import write_output, run_smac_based_optimizer
+from hyperboost.faster_ei_optimization import FasterInterleavedLocalAndRandomSearch
 from hyperboost.hyperboost import Hyperboost
-from smac.facade.roar_facade import ROAR
-from smac.facade.smac_hpo_facade import SMAC4HPO
+from SMAC3.smac.facade.roar_facade import ROAR
+from SMAC3.smac.facade.smac_hpo_facade import SMAC4HPO
 
 # Options
 ml_algorithms = [RandomForestSpace()]
@@ -68,22 +70,24 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 # Hyperboost
                 ########################################################################################################
-                name = "hyperboost"
-                print(f"\n[{name}] ")
-                hpo = Hyperboost(scenario=scenario, rng=rng, tae_runner=tat, pca_components=2)
-                hpo_result, info = run_smac_based_optimizer(hpo, tae)
-
-                write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
-                             f"test_loss={info['last_test_loss']}\n")
-
-                records = util.add_record(records, task_id, name, hpo_result)
+                # name = "hyperboost"
+                # print(f"\n[{name}] ")
+                # hpo = Hyperboost(scenario=scenario, rng=rng, tae_runner=tat, pca_components=2)
+                # hpo_result, info = run_smac_based_optimizer(hpo, tae)
+                #
+                # write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
+                #              f"test_loss={info['last_test_loss']}\n")
+                #
+                # records = util.add_record(records, task_id, name, hpo_result)
+                # util.store_json(records, name=ml_algorithm.name, trial=hpo_state)
 
                 ########################################################################################################
                 # SMAC
                 ########################################################################################################
                 name = "smac"
                 print(f"\n[{name}] ")
-                hpo = SMAC4HPO(scenario=scenario, rng=rng, tae_runner=tat)
+                hpo = SMAC4HPO(scenario=scenario, rng=rng, tae_runner=tat,
+                               acquisition_function_optimizer=InterleavedLocalAndRandomSearch)
                 hpo_result, info = run_smac_based_optimizer(hpo, tae)
 
                 write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
@@ -103,6 +107,7 @@ for hpo_state in config.SEEDS:
                              f"test_loss={info['last_test_loss']}\n")
 
                 records = util.add_record(records, task_id, name, hpo_result)
+                util.store_json(records, name=ml_algorithm.name, trial=hpo_state)
 
                 ########################################################################################################
                 # Random
@@ -138,10 +143,11 @@ for hpo_state in config.SEEDS:
                 }
 
                 records = util.add_record(records, task_id, name, hpo_result)
+                util.store_json(records, name=ml_algorithm.name, trial=hpo_state)
 
                 ########################################################################################################
 
                 write_output("\n")
 
             # Store results
-            util.store_json(records, name=ml_algorithm.name, trial=hpo_state)
+            # util.store_json(records, name=ml_algorithm.name, trial=hpo_state)

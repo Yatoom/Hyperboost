@@ -1,8 +1,9 @@
 from ConfigSpace import ConfigurationSpace
-from ConfigSpace import UniformFloatHyperparameter, UniformIntegerHyperparameter
-from ConfigSpace.hyperparameters import CategoricalHyperparameter
+from ConfigSpace.hyperparameters import CategoricalHyperparameter, UniformFloatHyperparameter
 from lightgbm import LGBMClassifier
 from sklearn.tree import DecisionTreeClassifier
+
+from LocalConfigSpace.ConfigSpace.hyperparameters import LocalUniformIntegerHyperparameter as UniformIntegerHyperparameter
 
 
 class ParamSpace:
@@ -59,7 +60,7 @@ class RandomForestSpace(ParamSpace):
         super().__init__()
         self.name = "RandomForest"
         self.model = LGBMClassifier
-        self.is_deterministic = False
+        self.is_deterministic = True
         self.configuration_space = ConfigurationSpace()
         self.configuration_space.add_hyperparameters([
             UniformFloatHyperparameter("colsample_bytree", 0.20, 0.80, default_value=0.70),
