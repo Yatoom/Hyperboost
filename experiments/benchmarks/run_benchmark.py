@@ -4,26 +4,18 @@ import numpy as np
 import openml
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import KFold, ShuffleSplit
-
 from experiments.benchmarks import config, util
-from experiments.benchmarks.param_spaces import RandomForestSpace
 from experiments.benchmarks.util import write_output, run_smac_based_optimizer
 from hyperboost.hyperboost import Hyperboost
 from smac.facade.roar_facade import ROAR
 from smac.facade.smac_hpo_facade import SMAC4HPO
-
-# Options
-ml_algorithms = [RandomForestSpace()]
-outer_loop = KFold(n_splits=3, shuffle=True, random_state=42)
-inner_loop = ShuffleSplit(n_splits=3, random_state=0, test_size=0.10, train_size=None)
 
 for hpo_state in config.SEEDS:
 
     # Setup random number generator
     rng = np.random.RandomState(hpo_state)
 
-    for ml_algorithm in ml_algorithms:
+    for ml_algorithm in config.ML_ALGORITHMS:
         records = {}
 
         for task_id in config.TASKS:
@@ -40,13 +32,12 @@ for hpo_state in config.SEEDS:
             numeric = dataset.get_features_by_type("numeric", exclude=[task.target_name])
 
             # Create a scenario object for SMAC
-            scenario = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic,
-                                            runcount_limit=config.NUM_ITER)
+            scenario = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic)
 
             # Log to output
             write_output(f"Task {task_id}\n")
 
-            for train_index, test_index in outer_loop.split(X):
+            for train_index, test_index in config.OUTER_LOOP.split(X):
                 X_train, y_train = X[train_index], y[train_index]
                 X_test, y_test = X[test_index], y[test_index]
 
@@ -60,10 +51,10 @@ for hpo_state in config.SEEDS:
                 X_test = ct.transform(X_test)
 
                 # Setup evaluator and tester
-                tat = util.create_target_algorithm_tester(ml_algorithm, X_train, y_train, cv=inner_loop,
-                                                          scoring="balanced_accuracy")
+                tat = util.create_target_algorithm_tester(ml_algorithm, X_train, y_train, cv=config.INNER_LOOP,
+                                                          scoring=config.METRIC)
                 tae = util.create_target_algorithm_evaluator(ml_algorithm, config.SEEDS, X_train, y_train, X_test,
-                                                             y_test, scoring="balanced_accuracy")
+                                                             y_test, scoring=config.METRIC)
 
                 ########################################################################################################
                 # Hyperboost

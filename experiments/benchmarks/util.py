@@ -10,26 +10,21 @@ from sklearn.model_selection import cross_val_score
 from smac.scenario.scenario import Scenario
 
 import experiments.benchmarks.config as cfgfile
+from experiments.benchmarks import config
 from experiments.benchmarks.param_spaces import ParamSpace
 
 
-def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = "quality", runcount_limit: int = 250,
-                    intens_min_chall: int = 2, maxR: int = 5, output_dir="smac_output", **kwargs) -> Scenario:
+def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = "quality",
+                    intens_min_chall: int = 2, **kwargs) -> Scenario:
     """
     Create a Scenario object
 
     Parameters
     ----------
-    output_dir: str
-        Specifies the output-directory for all emerging files, such as logging and results.
-    maxR: int
-        Maximum number of calls per configuration. Default: 2000.
     intens_min_chall: int
         Number of challengers to run against each other
     cs: ConfigurationSpace
         The configuration space to use within the scenario
-    runcount_limit: int
-        Maximum number of algorithm-calls during optimization. Default: inf
     run_obj: [‘runtime’, ‘quality’]
         Defines what metric to optimize. When optimizing runtime, cutoff_time is required as well.
     deterministic: bool
@@ -45,10 +40,10 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         "run_obj": run_obj,
         "cs": cs,
         "deterministic": "true" if deterministic else "false",
-        "runcount_limit": runcount_limit,
+        "runcount_limit": cfgfile.NUM_ITER,
         "intens_min_chall": intens_min_chall,
-        "maxR": maxR,
-        "output_dir": output_dir,
+        "maxR": cfgfile.MAXR,
+        "output_dir": cfgfile.SMAC_OUTPUT_FOLDER,
         **kwargs
     })
 
@@ -193,7 +188,7 @@ def get_smac_trajectories(smac, target_algorithm_evaluator, speed=1):
     return train_trajectory.tolist(), test_trajectory.tolist()
 
 
-def store_json(data, name, prefix="benchmark", trial=None):
+def store_json(data, name, prefix=config.RESULTS_PREFIX, trial=None):
     """
     Store benchmark data in a JSON file.
 
@@ -209,7 +204,12 @@ def store_json(data, name, prefix="benchmark", trial=None):
         The seed or trial number
     """
 
+    # Make sure results directory exists
+    if not os.path.exists(config.RESULTS_DIRECTORY):
+        os.mkdir(config. RESULTS_DIRECTORY)
+
     filename = f"{prefix}-{name}-{trial}.json"
+    filename = os.path.join(config.RESULTS_DIRECTORY, filename)
     exists = os.path.isfile(filename)
 
     # Initialize dictionary
@@ -254,7 +254,7 @@ def run_smac_based_optimizer(hpo, tae, speed=1):
     return hpo_result, info
 
 
-def write_output(*args, filename="output.txt", **kwargs):
+def write_output(*args, filename=config.BENCHMARK_OUTPUT_FILE, **kwargs):
     with open(filename, "a+") as f:
         f.write(*args)
 
