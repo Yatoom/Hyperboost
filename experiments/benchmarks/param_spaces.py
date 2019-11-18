@@ -2,6 +2,7 @@ from ConfigSpace import ConfigurationSpace
 from ConfigSpace import UniformFloatHyperparameter, UniformIntegerHyperparameter
 from ConfigSpace.hyperparameters import CategoricalHyperparameter
 from lightgbm import LGBMClassifier
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -118,7 +119,7 @@ class SVMSpace(ParamSpace):
     def __init__(self):
         super().__init__()
         self.name = "SVM"
-        self.model = DecisionTreeClassifier
+        self.model = LinearSVC
         self.is_deterministic = False
         self.configuration_space = ConfigurationSpace()
         self.configuration_space.add_hyperparameters([
