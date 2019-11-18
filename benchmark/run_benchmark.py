@@ -4,8 +4,8 @@ import numpy as np
 import openml
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from experiments.benchmarks import config, util
-from experiments.benchmarks.util import write_output, run_smac_based_optimizer
+from benchmark import config, util
+from benchmark.util import write_output, run_smac_based_optimizer
 from hyperboost.hyperboost import Hyperboost
 from smac.facade.roar_facade import ROAR
 from smac.facade.smac_hpo_facade import SMAC4HPO

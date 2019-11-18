@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from benchmark_visualize import group
-from benchmark_visualize.util import mean_of_runs, rank_against, mean_of_datasets
+from benchmark import group
+from benchmark.visualize_util import mean_of_runs, mean_of_datasets
 
 r = group.collect_combine_prefix("../benchmarks", "HPB-")
 r = dict(zip(range(len(r)), r))

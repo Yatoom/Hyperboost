@@ -9,9 +9,9 @@ from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_score
 from smac.scenario.scenario import Scenario
 
-import experiments.benchmarks.config as cfgfile
-from experiments.benchmarks import config
-from experiments.benchmarks.param_spaces import ParamSpace
+import benchmark.config as cfgfile
+from benchmark import config
+from benchmark.param_spaces import ParamSpace
 
 
 def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = "quality",
