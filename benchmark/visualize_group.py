@@ -5,6 +5,8 @@ import pandas as pd
 from benchmark import group, config
 from benchmark.visualize_util import mean_of_runs, mean_of_datasets
 
+plt.style.use("seaborn")
+
 # Collect the files from the results directory
 r = group.collect_combine_prefix(config.RESULTS_DIRECTORY, config.RESULTS_PREFIX + "-")
 r = dict(zip(range(len(r)), r))
@@ -17,15 +19,15 @@ r = {seed: mean_of_runs(i) for seed, i in r.items()}
 r = {seed: mean_of_datasets(i) for seed, i in r.items()}
 r = [r[i] for i in r]
 frames = [pd.DataFrame(i) for i in r]
-mean = pd.concat(frames).groupby(level=0).mean().iloc[1:]
-std = pd.concat(frames).groupby(level=0).std().iloc[1:]
+mean = pd.concat(frames).groupby(level=0).mean().iloc[1:].reset_index(drop=True)
+std = pd.concat(frames).groupby(level=0).std().iloc[1:].reset_index(drop=True)
 
 # Filter on columns with the word "mean_train" in it. Same works for "mean_test".
 columns = [i for i in mean.columns if "mean_train" in i]
 
 
 # We can also filter for one specific target model
-# columns = [i for i in columns if "DecisionTree" in i]
+columns = [i for i in columns if "DecisionTree" in i]
 
 # Here we can rename our columns.
 def rename(column):

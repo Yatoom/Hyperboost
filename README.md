@@ -16,7 +16,7 @@
     - We create 3 shuffled copies and split each copy into 90% training data and 10% test data.
     - We keep these splits the same for every configuration we try.
     
-Other configurations can be found in `experiments/benchmarks/config.py` and `experiments/benchmarks/util.py`.
+Other configurations can be found in `benchmark/config.py`.
 
 **What datasets are included?**    
 Currently there are 31 datasets included, which is a subset of the OpenML CC18 benchmark suite.
@@ -47,12 +47,15 @@ These can be found and edited in the `param_spaces.py` file.
 **How does the directory structure look?** 
 
 ```
-    experiments/
-    └ benchmarks/
-      ├ run_benchmark.py  - Execute this file to run the benchmark
-      ├ config.py         - Configuration for the benchmark
-      ├ param_spaces.py   - Parameter spaces to include in the benchmark
-      └ util.py           - Helper functions for the benchmark
+  benchmark/
+  ├ config.py                   - Configuration for the benchmark
+  ├ group.py                    - Helps visualize_group.py to group files together
+  ├ param_spaces.py             - Parameter spaces to include in the benchmark
+  ├ run_benchmark.py            - Execute this file to run the benchmark
+  ├ util.py                     - Helper functions for the benchmark
+  ├ visualize_group.py          - Visualize a group of result files
+  ├ visualize_single_file.py    - Visualize a single result file
+  └ visualize_util.py           - Helpers for visualization
 ```
 
 **How do I execute a benchmark?**    
@@ -84,7 +87,7 @@ running time, train loss and test loss per HPO method. Example ouput for one tas
    - `,` to indicate model initialization with this configuration completed
    - `;` to indicate cross validation with this model instance is finished
 
-**Where can I see the output?**   
+**Where can I see the results of the benchmark?**   
 The output can be seen in `benchmark-{name}-{seed}.json`, which stores the result as:
 ```
 task id > HPO method > [
@@ -101,6 +104,6 @@ task id > HPO method > [
 ```
 
 **How do I visualize the results?**   
-The easiest way is to use `benchmark_visualize/visualize_single_file.py`, which is only capable of visualizing a single
-json-file. Visualizing a group of files can be done using `benchmark_visualize/visualize_single_file.py`, which looks for files 
+The easiest way is to use `benchmark/visualize_single_file.py`, which is only capable of visualizing a single
+json-file. Visualizing a group of files can be done using `benchmark/visualize_single_file.py`, which looks for files 
 with a given prefix or inside a certain directory. 
