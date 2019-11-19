@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from benchmark import group
+from benchmark import group, config
 from benchmark.visualize_util import mean_of_runs, mean_of_datasets
 
-r = group.collect_combine_prefix("../benchmarks", "HPB-")
+r = group.collect_combine_prefix(config.RESULTS_DIRECTORY, config.RESULTS_DIRECTORY + "-")
 r = dict(zip(range(len(r)), r))
 r = {seed: mean_of_runs(i) for seed, i in r.items()}
 # r = {seed: rank_against(i) for seed, i in r.items()}

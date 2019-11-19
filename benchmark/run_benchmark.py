@@ -1,3 +1,4 @@
+import os
 import time
 
 import numpy as np
@@ -10,6 +11,11 @@ from hyperboost.hyperboost import Hyperboost
 from smac.facade.roar_facade import ROAR
 from smac.facade.smac_hpo_facade import SMAC4HPO
 
+# Create output directory
+if not os.path.exists(config.BASE_DIRECTORY):
+    os.mkdir(config.BASE_DIRECTORY)
+
+# Benchmark
 for hpo_state in config.SEEDS:
 
     # Setup random number generator
@@ -32,7 +38,8 @@ for hpo_state in config.SEEDS:
             numeric = dataset.get_features_by_type("numeric", exclude=[task.target_name])
 
             # Create a scenario object for SMAC
-            scenario = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic)
+            scenario = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic,
+                                            subpath=[str(hpo_state), ml_algorithm.name, str_task_id])
 
             # Log to output
             write_output(f"Task {task_id}\n")

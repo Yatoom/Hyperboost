@@ -6,3 +6,4 @@ dist/
 __pycache__/
 smac3-output_*/
 smac3_output_*/
+output/

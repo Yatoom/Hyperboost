@@ -15,7 +15,7 @@ from benchmark.param_spaces import ParamSpace
 
 
 def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = "quality",
-                    intens_min_chall: int = 2, **kwargs) -> Scenario:
+                    intens_min_chall: int = 2, subpath=None, **kwargs) -> Scenario:
     """
     Create a Scenario object
 
@@ -29,6 +29,8 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         Defines what metric to optimize. When optimizing runtime, cutoff_time is required as well.
     deterministic: bool
         Whether the target algorithm is
+    subpath: list
+        Concatenate this path with the base path
 
     Returns
     -------
@@ -36,6 +38,9 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         A scenario object
 
     """
+    if subpath is None:
+        subpath = []
+
     return Scenario({
         "run_obj": run_obj,
         "cs": cs,
@@ -43,7 +48,7 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
         "runcount_limit": cfgfile.NUM_ITER,
         "intens_min_chall": intens_min_chall,
         "maxR": cfgfile.MAXR,
-        "output_dir": cfgfile.SMAC_OUTPUT_FOLDER,
+        "output_dir": os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
         **kwargs
     })
 

@@ -1,11 +1,13 @@
-import numpy as np
+import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 
+from benchmark import config
 from benchmark.visualize_util import load, mean_of_runs, mean_of_datasets, rename
 
 plt.style.use("seaborn")
-filename = "../benchmarks/NEW-RandomForest-2268061101.json"
+filename = os.path.join(config.RESULTS_DIRECTORY, f"{config.RESULTS_PREFIX}-RandomForest-2268061101.json")
 data = load(filename)
 
 r = mean_of_runs(data)

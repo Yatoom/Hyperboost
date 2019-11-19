@@ -12,7 +12,7 @@ SEEDS = [2268061101, 2519249986, 338403738]
 Number of iterations in a HPO algorithm.
 The maximum number of times we test a configuration. 
 """
-NUM_ITER = 250
+NUM_ITER = 5
 
 """
 Task IDs of tasks to load from OpenML. 
@@ -25,11 +25,11 @@ TASKS = [125920, 49, 146819, 29, 15, 3913, 3, 10101, 9971, 146818, 3917, 37, 391
 
 """
 """
-BASE_DIRECTORY = "../"
+BASE_DIRECTORY = "../output/"
 
 """
-Output folder for SMAC
-Specifies the output-directory for all emerging files, such as logging and results.
+Output folder for SMAC (and by extension, Hyperboost)
+Specifies the output-directory for all emerging files from SMAC, such as logging and results.
 """
 SMAC_OUTPUT_FOLDER = os.path.join(BASE_DIRECTORY, "smac_output/")
 
