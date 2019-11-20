@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 from smac.epm.base_epm import AbstractEPM
 
 
-class LightEPM(AbstractEPM):
+class HyperEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
                  instance_features: np.ndarray = None, pca_components_: float = None, seed=None, configspace=None):
 

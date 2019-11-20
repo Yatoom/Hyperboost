@@ -3,7 +3,7 @@ import numpy as np
 from smac.optimizer.acquisition import AbstractAcquisitionFunction
 
 
-class Direct(AbstractAcquisitionFunction):
+class ScorePlusDistance(AbstractAcquisitionFunction):
 
     def __init__(self, model):
         super().__init__(model)

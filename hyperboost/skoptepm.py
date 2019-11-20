@@ -6,7 +6,7 @@ from lightgbm import LGBMRegressor
 from smac.epm.base_epm import AbstractEPM
 
 
-class LightEPMWithStd(AbstractEPM):
+class SkoptEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
                  instance_features: np.ndarray = None, pca_components: float = None, seed=None):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=pca_components)
