@@ -12,7 +12,7 @@ SEEDS = [2268061101, 2519249986, 338403738]
 Number of iterations in a HPO algorithm.
 The maximum number of times we test a configuration. 
 """
-NUM_ITER = 5
+NUM_ITER = 250
 
 """
 Task IDs of tasks to load from OpenML. 
@@ -57,15 +57,15 @@ MAXR = 5
 The metric the HPO algorithm needs to optimize for.
 Will be passed to Scikit-Learn's cross validation scoring parameter.
 """
-METRIC = 'accuracy'
+METRIC = 'balanced_accuracy'
 
 """
 Parameter spaces to optimize.
 """
 ML_ALGORITHMS = [
     RandomForestSpace(),
-    GradientBoostingSpace(),
-    DecisionTreeSpace()
+    # GradientBoostingSpace(),
+    # DecisionTreeSpace()
 ]
 
 """

@@ -15,7 +15,7 @@ class HyperEPM(AbstractEPM):
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None,
                          configspace=configspace, seed=seed)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
-                                   alpha=0.03, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
+                                   alpha=0.10, min_data_in_bin=1, n_jobs=4, n_estimators=100, random_state=seed)
 
         # A KDTree to be constructed for measuring distance
         self.kdtree = None
