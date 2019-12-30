@@ -57,7 +57,7 @@ class HyperEPM(AbstractEPM):
         self.X = X_
         self.y = y_
         self.X_transformed = self.transform(X)
-        self.inc = np.max(y_)
+        self.inc = np.min(y_)  # minimize loss
         n_samples = X_.shape[0]
 
         if n_samples >= 2:
@@ -94,7 +94,11 @@ class HyperEPM(AbstractEPM):
             unscaled_dist = dist.reshape(-1) / self.max_distance
             # loss[unscaled_dist == 0] = 1
             dist = unscaled_dist * scale
-            closeness = 1 - dist
+            closeness = - dist
+
+            assert(loss <= 0)
+            assert(loss >= -1)
+            assert(closeness <= 0)
 
         return loss, closeness
 

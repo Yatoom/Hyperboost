@@ -99,7 +99,7 @@ def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv
         # Print a semicolon to indicate cross validation finished
         print(";", end="", flush=True)
 
-        return 1 - np.mean(score)
+        return -np.mean(score)
 
     return tat
 
@@ -139,7 +139,7 @@ def create_target_algorithm_evaluator(param_space: ParamSpace, seeds, X_train, y
             ml_algorithm = param_space.initialize_algorithm(random_state=seed, **cfg)
             ml_algorithm.fit(X_train, y_train)
             results.append(scorer(ml_algorithm, X_test, y_test))
-        loss = 1 - np.mean(results)
+        loss = -np.mean(results)
         std = np.std(results)
         return loss, std
 

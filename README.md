@@ -1,5 +1,11 @@
 # Hyperboost
 
+## Setup
+Make sure that SWIG and Python-dev are installed:
+```
+$ apt install swig python3-dev
+```
+
 
 ## Benchmark
 
