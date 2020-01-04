@@ -10,6 +10,7 @@ class Group:
     directory: str
     prefix: str
     target_model: str
+    collection: object
     files: list = None
 
     group_avg_: dict = None
@@ -55,8 +56,7 @@ class Group:
 
         raise NotImplementedError()
 
-    @property
-    def task_avg(self):
+    def task_avg(self, select_tasks=None):
         # INPUT:
         #
         # task > method > avg. loss_train
@@ -80,7 +80,11 @@ class Group:
         num_tasks = len(group_avg.keys())
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
-        for task in group_avg:
+        tasks = self.collection.common_tasks
+        if select_tasks:
+            tasks = select_tasks
+
+        for task in tasks:
             for method in group_avg[task]:
                 d = group_avg[task][method]
                 result[method]['loss_train'] += np.array(d['loss_train']) / num_tasks

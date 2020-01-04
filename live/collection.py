@@ -2,6 +2,10 @@ import os
 
 from live import File, Group
 import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+import cufflinks as cf
 
 
 class Collection:
@@ -11,7 +15,12 @@ class Collection:
     @property
     def common_tasks(self):
         d = [g.common_tasks for g in self.groups]
-        return set.intersection(*map(set, d))
+        return list(set.intersection(*map(set, d)))
+
+    @property
+    def all_tasks(self):
+        d = [k for g in self.groups for k in list(g.common_tasks)]
+        return list(set(d))
 
     def add_files(self, directory):
         for filename in os.listdir(directory):
@@ -22,7 +31,8 @@ class Collection:
             group = self.get_group(
                 directory=directory,
                 prefix=prefix,
-                target_model=target_model
+                target_model=target_model,
+                collection=self
             )
 
             # Create file object
@@ -48,15 +58,30 @@ class Collection:
         group.files = []
         return group
 
-    def visualize(self, data='train', method='avg'):
+    def visualize_streamlit(self, data='train', method='avg', tasks=None):
+        frame = pd.DataFrame()
+        for group in self.groups:
+            task_avg = group.task_avg(select_tasks=tasks)
+            for algorithm in task_avg:
+                label = f"{group.prefix}-{group.target_model}-{algorithm}"
+                frame[label] = task_avg[algorithm][f'loss_{data}'][1:]
+        # return frame)
+        print('iplot')
+        fig = frame.iplot(kind='line')
+        # fig = px.line(frame)
+        print('st plotly')
+        st.plotly_chart(fig)
+
+
+    def visualize(self, data='train', method='avg', tasks=None):
         plt.style.use('seaborn')
         for group in self.groups:
-            task_avg = group.task_avg
+            task_avg = group.task_avg(select_tasks=tasks)
             for algorithm in task_avg:
                 label = f"{group.prefix}-{group.target_model}-{algorithm}"
                 plt.plot(task_avg[algorithm][f'loss_{data}'][1:], label=label)
         plt.legend()
         plt.xlabel('# Iterations')
         plt.ylabel('Loss')
-        plt.title(data)
+        # plt.title(data)
         plt.show()
