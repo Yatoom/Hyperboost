@@ -8,7 +8,7 @@ from benchmark.visualize_util import mean_of_runs, mean_of_datasets, rank_agains
 plt.style.use("seaborn")
 
 # Collect the files from the results directory
-r = group.collect_combine_prefix(config.RESULTS_DIRECTORY, config.RESULTS_PREFIX + "-")
+r = group.collect_combine_prefix("../output/results", "scaling" + "-")
 r = dict(zip(range(len(r)), r))
 r = {seed: mean_of_runs(i) for seed, i in r.items()}
 
@@ -23,7 +23,7 @@ mean = pd.concat(frames).groupby(level=0).mean().iloc[1:].reset_index(drop=True)
 std = pd.concat(frames).groupby(level=0).std().iloc[1:].reset_index(drop=True)
 
 # Filter on columns with the word "mean_train" in it. Same works for "mean_test".
-columns = [i for i in mean.columns if "mean_test" in i]
+columns = [i for i in mean.columns if "mean_train" in i]
 
 
 # We can also filter for one specific target model

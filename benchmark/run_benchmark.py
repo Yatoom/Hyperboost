@@ -5,6 +5,8 @@ import numpy as np
 import openml
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
+from smac.epm.rf_with_instances import RandomForestWithInstances
+
 from benchmark import config, util
 from benchmark.util import write_output, run_smac_based_optimizer
 from hyperboost.hyperboost import Hyperboost
@@ -69,6 +71,7 @@ for hpo_state in config.SEEDS:
                 name = "hyperboost"
                 print(f"\n[{name}] ")
                 hpo = Hyperboost(scenario=scenario, rng=rng, tae_runner=tat, pca_components=2)
+                assert(type(hpo.solver.model) != RandomForestWithInstances)
                 hpo_result, info = run_smac_based_optimizer(hpo, tae)
 
                 write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "

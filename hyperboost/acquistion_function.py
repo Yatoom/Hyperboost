@@ -9,7 +9,7 @@ class ScorePlusDistance(AbstractAcquisitionFunction):
         super().__init__(model)
 
     def _compute(self, X: np.ndarray):
-        loss, closeness = self.model.predict(X)
+        score, distance = self.model.predict(X)
 
-        return np.abs(loss) * np.abs(closeness)
+        return score * distance
         # return 1 - (loss + closeness) / 2

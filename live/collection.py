@@ -3,6 +3,7 @@ import os
 from live import File, Group
 import matplotlib.pyplot as plt
 
+
 class Collection:
     def __init__(self):
         self.groups = []

@@ -1,9 +1,11 @@
 import typing
+from math import sqrt
 
 import numpy as np
 from lightgbm import LGBMRegressor
 from scipy.spatial import cKDTree
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler
 
 from smac.epm.base_epm import AbstractEPM
 
@@ -12,6 +14,7 @@ class HyperEPM(AbstractEPM):
     def __init__(self, types: np.ndarray, bounds: typing.List[typing.Tuple[float, float]],
                  instance_features: np.ndarray = None, pca_components_: float = None, seed=None, configspace=None):
 
+        print("HyperEPM!")
         super().__init__(types=types, bounds=bounds, instance_features=instance_features, pca_components=None,
                          configspace=configspace, seed=seed)
         self.light = LGBMRegressor(verbose=-1, min_child_samples=1, objective="quantile", num_leaves=8,
@@ -41,66 +44,81 @@ class HyperEPM(AbstractEPM):
         # The number of possible categories per nominal parameter
         self.categories = types[self.selection]
 
-        # The maximum L1 distance between two points in hyperparameter space
-        self.max_distance = sum(np.maximum(i, 1) for i in types) ** 2
+        # The maximum euclidean distance between two points in hyperparameter space
+        lengths = np.array([np.maximum(i, 1) for i in types])
+        self.max_distance = self.max_euclid_distance(lengths)
 
         self.pca_components_ = pca_components_
+
         if pca_components_ is not None and pca_components_ > 0:
             self.pca_ = PCA(n_components=pca_components_)
         else:
             self.pca_ = None
 
     def _train(self, X, y):
-        X_ = X
-        y_ = y
+        self.X = X
+        self.y = y
 
-        self.X = X_
-        self.y = y_
+        self.y_scaler = MinMaxScaler().fit(y)
+
+        # One-hot-encode the categorical variables
         self.X_transformed = self.transform(X)
-        self.inc = np.min(y_)  # minimize loss
-        n_samples = X_.shape[0]
+
+        self.inc = np.min(y)  # minimize loss
+        n_samples = X.shape[0]
 
         if n_samples >= 2:
-            self.light.fit(X_, y_.flatten())
+            self.light.fit(X, y.flatten())
 
             if self.pca_ is not None and self.X_transformed.shape[1] > self.pca_components_:
                 self.X_transformed = self.pca_.fit_transform(self.X_transformed)
+
+                # Update maximum distance because the axes in PCA might cause slightly different maximum distance
+                # new_max_distance = self.max_euclid_distance(self.lengths(self.X_transformed))
+                # self.max_distance = new_max_distance
 
         self.kdtree = cKDTree(self.X_transformed)
 
     def _predict(self, X):
 
-        # Zeros returned in case model was not fitted
-        loss = np.zeros(X.shape[0])
-
-        # Variance only returned for compatibility
-        closeness = np.zeros(X.shape[0])
-
-        # Model not fitted
+        # Return zero's if the model is not fitted
         if self.light._n_features is None:
-            return loss, closeness
-        else:
-            loss = self.light.predict(X)
-            X_transformed = self.transform(X)
+            return np.zeros(X.shape[0]), np.zeros(X.shape[0])
 
-            if self.pca_ is not None and X_transformed.shape[1] > self.pca_components_ and \
-                    self.X_transformed.shape[0] >= 2:
-                X_transformed = self.pca_.transform(X_transformed)
+        # Predict the loss of each sample in X
+        loss = self.light.predict(X)
 
-            dist, ind = self.kdtree.query(X_transformed, k=1, p=2)
+        # One-hot-encode X
+        X_transformed = self.transform(X)
 
-            scale = np.std(self.y)
-            # print("var_y:", np.var(self.y), "var_x:", np.var(self.X))
-            unscaled_dist = dist.reshape(-1) / self.max_distance
-            # loss[unscaled_dist == 0] = 1
-            dist = unscaled_dist * scale
-            closeness = - dist
+        # Perform dimensionality reduction on X if its transformed
+        # (i.e. one-hot-encoded) form contains more dimensions
+        # than the maximum we specified.
+        if (
+            self.pca_ is not None and
+            X_transformed.shape[1] > self.pca_components_ and
+            self.X_transformed.shape[0] >= 2
+        ):
+            X_transformed = self.pca_.transform(X_transformed)
 
-            assert(loss <= 0)
-            assert(loss >= -1)
-            assert(closeness <= 0)
+        # Calculate the distance to the closest known sample
+        distances, indices = self.kdtree.query(X_transformed, k=1, p=2)
 
-        return loss, closeness
+        # Transform distance to scale 0-1.
+        normalized_distance = distances.reshape(-1) / self.max_distance
+
+        # Transform loss to scale 0-1.
+        normalized_loss = self.y_scaler.transform(np.atleast_2d(loss))[0]
+
+        # print("distance", normalized_distance.min(), normalized_distance.max())
+        # print("loss", normalized_loss.min(), normalized_loss.max())
+
+        # Scale distance
+        # scale = np.std(self.y)
+        # scaled_distance = normalized_distance * scale
+
+        # Return score and distance
+        return - normalized_loss, normalized_distance
 
     def transform(self, X):
         if not self.contains_nominal:
@@ -126,3 +144,11 @@ class HyperEPM(AbstractEPM):
         result = np.zeros(length)
         result[indicator] = 1
         return result
+
+    @staticmethod
+    def lengths(X: np.array) -> np.array:
+        return X.max(axis=0) - X.min(axis=0)
+
+    @staticmethod
+    def max_euclid_distance(lengths: np.array) -> np.array:
+        return np.sqrt(np.sum(lengths**2))
