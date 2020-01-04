@@ -37,6 +37,9 @@ class Hyperboost(SMAC4HPO):
             # Pass parameters to SMAC4HPO
             super().__init__(scenario=scenario, rng=rng, model=model, **kwargs)
 
+            # Required for the newer version of SMAC.
+            self.solver.model = model
+
         elif method == Method.HYPERBOOST:
 
             # Initialize HyperBoost's empirical performance model
@@ -46,3 +49,6 @@ class Hyperboost(SMAC4HPO):
             # Pass parameters to SMAC4HPO
             super().__init__(scenario=scenario, rng=rng, model=model,
                              acquisition_function=ScorePlusDistance, **kwargs)
+
+            # Required for the newer version of SMAC.
+            self.solver.model = model
