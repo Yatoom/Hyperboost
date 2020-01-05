@@ -6,10 +6,11 @@ from benchmark.config import TASKS, SEEDS
 from live import Collection
 
 c = Collection()
-c = c.add_files('testing/')
-c = c.add_files('output/results-plus/')
+c = c.add_files('baseline/')
+# c = c.add_files('output/results-plus/')
 
-num_iterations = len(os.listdir('output/results-plus/'))
+# num_iterations = len(os.listdir('output/results-plus/'))
+num_iterations = 3
 num_seeds = len(SEEDS)
 
 # Make a selection
@@ -49,9 +50,9 @@ st.sidebar.markdown(f"""
 """)
 st.sidebar.progress(len(c.common_tasks) / len(TASKS))
 
-st.title('Training results')
+st.subheader('Training results')
 c.visualize(data='train', tasks=task, include_incomplete_files=include_incomplete_files)
 st.pyplot()
-st.title('Validation results')
+st.subheader('Validation results')
 c.visualize(data='test', tasks=task, include_incomplete_files=include_incomplete_files)
 st.pyplot()
