@@ -18,7 +18,7 @@ class Group:
 
     @property
     def id(self):
-        return os.path.join(self.directory, self.prefix, self.target_model, self.files)
+        return os.path.join(self.directory, self.prefix, self.target_model)
 
     @property
     def common_tasks(self):
@@ -38,6 +38,10 @@ class Group:
     def all_tasks(self):
         d = [k for f in self.files for k in f.tasks]
         return list(set(d))
+
+    @property
+    def all_seeds(self):
+        return [file.seed for file in self.files]
 
     @property
     def array_length(self):
@@ -70,7 +74,7 @@ class Group:
 
         raise NotImplementedError()
 
-    def task_avg(self, select_tasks=None, include_incomplete_files=True):
+    def task_avg(self, select_tasks=None, include_incomplete_files=True, seeds=None):
         # INPUT:
         #
         # task > method > avg. loss_train
@@ -87,7 +91,7 @@ class Group:
         #        > avg. run_time
         #        > avg. n_configs
 
-        group_avg = self.group_avg(include_incomplete_files=include_incomplete_files)
+        group_avg = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
         tasks = self.collection.common_tasks if include_incomplete_files else self.all_tasks
@@ -107,7 +111,7 @@ class Group:
 
         return result
 
-    def group_avg(self, include_incomplete_files=True):
+    def group_avg(self, include_incomplete_files=True, seeds=None):
 
         # INPUT:
         #
@@ -127,6 +131,11 @@ class Group:
 
         array_length = self.array_length
         files = self.files if include_incomplete_files else self.complete_files
+
+        # Filter out files that do not have one of the included seeds
+        if seeds is not None:
+            files = [file for file in files if file.seed in seeds]
+
         num_files = len(files)
 
         aggregated = defaultdict(
@@ -136,6 +145,8 @@ class Group:
                 )
             )
         )
+
+        print(num_files)
 
         for file in files:
             for task in file.fold_avg:

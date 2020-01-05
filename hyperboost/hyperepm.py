@@ -59,7 +59,7 @@ class HyperEPM(AbstractEPM):
         self.X = X
         self.y = y
 
-        self.y_scaler = MinMaxScaler().fit(y)
+        self.y_scaler = MinMaxScaler(feature_range=(-1,0)).fit(y)
 
         # One-hot-encode the categorical variables
         self.X_transformed = self.transform(X)
@@ -107,7 +107,7 @@ class HyperEPM(AbstractEPM):
         # Transform distance to scale 0-1.
         normalized_distance = distances.reshape(-1) / self.max_distance
 
-        # Transform loss to scale 0-1.
+        # Transform loss to scale (-1, 0).
         normalized_loss = self.y_scaler.transform(np.atleast_2d(loss))[0]
 
         # print("distance", normalized_distance.min(), normalized_distance.max())
@@ -118,7 +118,7 @@ class HyperEPM(AbstractEPM):
         # scaled_distance = normalized_distance * scale
 
         # Return score and distance
-        return - normalized_loss, normalized_distance
+        return -normalized_loss, normalized_distance
 
     def transform(self, X):
         if not self.contains_nominal:
