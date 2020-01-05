@@ -19,6 +19,7 @@ class Collection:
 
     @property
     def all_tasks(self):
+        # FIXME: I think we should take the intersection of all_tasks of each group
         d = [k for g in self.groups for k in list(g.common_tasks)]
         return list(set(d))
 
@@ -58,25 +59,24 @@ class Collection:
         group.files = []
         return group
 
-    def visualize_streamlit(self, data='train', method='avg', tasks=None):
-        frame = pd.DataFrame()
-        for group in self.groups:
-            task_avg = group.task_avg(select_tasks=tasks)
-            for algorithm in task_avg:
-                label = f"{group.prefix}-{group.target_model}-{algorithm}"
-                frame[label] = task_avg[algorithm][f'loss_{data}'][1:]
-        # return frame)
-        print('iplot')
-        fig = frame.iplot(kind='line')
-        # fig = px.line(frame)
-        print('st plotly')
-        st.plotly_chart(fig)
+    # def visualize_streamlit(self, data='train', method='avg', tasks=None):
+    #     frame = pd.DataFrame()
+    #     for group in self.groups:
+    #         task_avg = group.task_avg(select_tasks=tasks)
+    #         for algorithm in task_avg:
+    #             label = f"{group.prefix}-{group.target_model}-{algorithm}"
+    #             frame[label] = task_avg[algorithm][f'loss_{data}'][1:]
+    #     # return frame)
+    #     print('iplot')
+    #     fig = frame.iplot(kind='line')
+    #     # fig = px.line(frame)
+    #     print('st plotly')
+    #     st.plotly_chart(fig)
 
-
-    def visualize(self, data='train', method='avg', tasks=None):
+    def visualize(self, data='train', method='avg', tasks=None, include_incomplete_files=True):
         plt.style.use('seaborn')
         for group in self.groups:
-            task_avg = group.task_avg(select_tasks=tasks)
+            task_avg = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files)
             for algorithm in task_avg:
                 label = f"{group.prefix}-{group.target_model}-{algorithm}"
                 plt.plot(task_avg[algorithm][f'loss_{data}'][1:], label=label)

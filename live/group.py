@@ -26,6 +26,20 @@ class Group:
         return set.intersection(*map(set, d))
 
     @property
+    def complete_files(self):
+        all_tasks = self.all_tasks
+        files = []
+        for f in self.files:
+            if len(list(f.tasks)) == len(all_tasks):
+                files.append(f)
+        return files
+
+    @property
+    def all_tasks(self):
+        d = [k for f in self.files for k in f.tasks]
+        return list(set(d))
+
+    @property
     def array_length(self):
         return self.files[0].array_length
 
@@ -56,7 +70,7 @@ class Group:
 
         raise NotImplementedError()
 
-    def task_avg(self, select_tasks=None):
+    def task_avg(self, select_tasks=None, include_incomplete_files=True):
         # INPUT:
         #
         # task > method > avg. loss_train
@@ -73,14 +87,12 @@ class Group:
         #        > avg. run_time
         #        > avg. n_configs
 
-        if self.task_avg_:
-            return self.task_avg_
-
-        group_avg = self.group_avg
+        group_avg = self.group_avg(include_incomplete_files=include_incomplete_files)
         num_tasks = len(group_avg.keys())
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
-        tasks = self.collection.common_tasks
+        tasks = self.collection.common_tasks if include_incomplete_files else self.all_tasks
+
         if select_tasks:
             tasks = select_tasks
 
@@ -93,11 +105,9 @@ class Group:
                 result[method]['run_time'] += d['run_time'] / num_tasks
                 result[method]['n_configs'] += d['n_configs'] / num_tasks
 
-        self.task_avg_ = result
         return result
 
-    @property
-    def group_avg(self):
+    def group_avg(self, include_incomplete_files=True):
 
         # INPUT:
         #
@@ -115,11 +125,9 @@ class Group:
         #               > avg. run_time
         #               > avg. n_configs
 
-        if self.group_avg_:
-            return self.group_avg_
-
         array_length = self.array_length
-        num_files = len(self.files)
+        files = self.files if include_incomplete_files else self.complete_files
+        num_files = len(files)
 
         aggregated = defaultdict(
             lambda: defaultdict(
@@ -129,7 +137,7 @@ class Group:
             )
         )
 
-        for file in self.files:
+        for file in files:
             for task in file.fold_avg:
                 for method in file.data[task]:
                     d = file.fold_avg[task][method]
