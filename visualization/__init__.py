@@ -1,3 +1,3 @@
-from live.group import Group
-from live.file import File
-from live.collection import Collection
+from visualization.group import Group
+from visualization.file import File
+from visualization.collection import Collection

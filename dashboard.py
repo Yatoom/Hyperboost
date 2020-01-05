@@ -3,14 +3,14 @@ import os
 import streamlit as st
 
 from benchmark.config import TASKS, SEEDS
-from live import Collection
+from visualization import Collection
 
 c = Collection()
 c = c.add_files('baseline/')
-# c = c.add_files('output/results-plus/')
+c = c.add_files('output/results/')
 
-# num_iterations = len(os.listdir('output/results-plus/'))
-num_iterations = 3
+num_iterations = len(os.listdir('output/results/'))
+# num_iterations = 3
 num_seeds = len(SEEDS)
 
 # Make a selection

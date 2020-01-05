@@ -1,6 +1,6 @@
 import os
 
-from live import File, Group
+from visualization import File, Group
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px

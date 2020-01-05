@@ -5,7 +5,7 @@ from typing import Union
 
 import numpy as np
 
-from live.group import Group
+from visualization.group import Group
 
 
 class File:

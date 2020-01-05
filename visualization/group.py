@@ -27,10 +27,10 @@ class Group:
 
     @property
     def complete_files(self):
-        all_tasks = self.all_tasks
+        num_tasks = len(self.collection.all_tasks)
         files = []
         for f in self.files:
-            if len(list(f.tasks)) == len(all_tasks):
+            if len(list(f.tasks)) == num_tasks:
                 files.append(f)
         return files
 
@@ -88,10 +88,10 @@ class Group:
         #        > avg. n_configs
 
         group_avg = self.group_avg(include_incomplete_files=include_incomplete_files)
-        num_tasks = len(group_avg.keys())
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
         tasks = self.collection.common_tasks if include_incomplete_files else self.all_tasks
+        num_tasks = len(tasks)
 
         if select_tasks:
             tasks = select_tasks
