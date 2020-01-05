@@ -95,10 +95,12 @@ class Group:
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
         tasks = self.collection.common_tasks if include_incomplete_files else self.all_tasks
-        num_tasks = len(tasks)
 
+        # FIXME: we are overriding here. I think we should take an intersection.
         if select_tasks:
             tasks = select_tasks
+
+        num_tasks = len(tasks)
 
         for task in tasks:
             for method in group_avg[task]:
