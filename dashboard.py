@@ -8,9 +8,9 @@ from visualization import Collection, variables
 
 c = Collection()
 c = c.add_files('baseline/')
-c = c.add_files('output/results/')
+c = c.add_files('output/results4/')
 
-num_iterations = len(os.listdir('output/results/'))
+num_iterations = len(os.listdir('output/results3/'))
 num_seeds = len(SEEDS)
 
 st.header('Settings')
@@ -29,13 +29,13 @@ subset_iterations = st.radio(
 )
 
 # Set the selection
-tasks = c.common_tasks if subset_type == variables.TASK_INTERSECTION else c.all_tasks
+tasks = c.intersection_of_tasks if subset_type == variables.TASK_INTERSECTION else c.union_of_tasks
 include_incomplete_files = subset_type == variables.REMOVE_INCOMPLETE
-seeds = c.all_seeds if subset_iterations == variables.ALL_SEEDS else c.completed_seeds
+seeds = c.union_of_completed_seeds if subset_iterations == variables.ALL_SEEDS else c.intersection_of_completed_seeds
 
 # Show selected tasks and seeds
-selected_tasks = st.multiselect('Tasks selected', c.all_tasks, default=tasks)
-selected_seeds = st.multiselect('Seeds selected', c.all_seeds, default=seeds)
+selected_tasks = st.multiselect('Tasks selected', c.union_of_tasks, default=tasks)
+selected_seeds = st.multiselect('Seeds selected', c.union_of_completed_seeds, default=seeds)
 
 # Visualize
 st.header('Results')

@@ -2,6 +2,8 @@ import copy
 from collections import defaultdict
 from dataclasses import dataclass
 import os
+from pdb import set_trace
+
 import numpy as np
 
 
@@ -21,26 +23,41 @@ class Group:
         return os.path.join(self.directory, self.prefix, self.target_model)
 
     @property
-    def common_tasks(self):
+    def intersection_of_tasks(self):
         d = [f.tasks for f in self.files]
         return set.intersection(*map(set, d))
 
     @property
-    def complete_files(self):
-        num_tasks = len(self.collection.all_tasks)
+    def union_of_tasks(self):
+        d = [k for f in self.files for k in f.tasks]
+        return list(set(d))
+
+    def get_files_that_completed_tasks(self, tasks=None):
+        """
+        Retrieve a list of files that completed the given tasks.
+
+        Parameters
+        ----------
+        tasks: list, default = self.collection.union_of_tasks
+            A list of files to check.
+
+        Returns
+        -------
+        files: list
+            A list of files that completed the given tasks.
+        """
+
+        if tasks is None:
+            tasks = self.collection.union_of_tasks
+
         files = []
         for f in self.files:
-            if len(list(f.tasks)) == num_tasks:
+            if all(task in tasks for task in tasks):
                 files.append(f)
         return files
 
     @property
-    def all_tasks(self):
-        d = [k for f in self.files for k in f.tasks]
-        return list(set(d))
-
-    @property
-    def all_seeds(self):
+    def union_of_seeds(self):
         return [file.seed for file in self.files]
 
     @property
@@ -94,15 +111,28 @@ class Group:
         group_avg = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
         result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
 
-        tasks = self.collection.common_tasks if include_incomplete_files else self.all_tasks
-
-        # FIXME: we are overriding here. I think we should take an intersection.
+        # Set the selected tasks, or use the union of all tasks by default
         if select_tasks:
-            tasks = select_tasks
+            tasks = set(select_tasks)
+        else:
+            tasks = set(self.collection.union_of_tasks)
+
+        if include_incomplete_files:
+            # If we include incomplete files, we should take the intersection of tasks that are completed by the
+            # incomplete files and the complete files.
+            intersection_of_tasks = set(self.collection.intersection_of_tasks)
+            tasks = set.intersection(tasks, intersection_of_tasks)
+        else:
+            # Get all tasks, but if the current file doesn't have all tasks, we should take an intersection
+            # Or not: we either take the intersection of the tasks OR we exclude incomplete file.
+            union_of_tasks = set(self.union_of_tasks)
+            tasks = set.intersection(tasks, union_of_tasks)
 
         num_tasks = len(tasks)
+        count_tasks = 0
 
         for task in tasks:
+            count_tasks += 1
             for method in group_avg[task]:
                 d = group_avg[task][method]
                 result[method]['loss_train'] += np.array(d['loss_train']) / num_tasks
@@ -111,6 +141,7 @@ class Group:
                 result[method]['run_time'] += d['run_time'] / num_tasks
                 result[method]['n_configs'] += d['n_configs'] / num_tasks
 
+        assert(num_tasks == count_tasks)
         return result
 
     def group_avg(self, include_incomplete_files=True, seeds=None):
@@ -132,7 +163,11 @@ class Group:
         #               > avg. n_configs
 
         array_length = self.array_length
-        files = self.files if include_incomplete_files else self.complete_files
+
+        if include_incomplete_files:
+            files = self.get_files_that_completed_tasks(self.collection.union_of_tasks)
+        else:
+            files = self.files
 
         # Filter out files that do not have one of the included seeds
         if seeds is not None:

@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict
+from pdb import set_trace
 
 from visualization import File, Group
 import matplotlib.pyplot as plt
@@ -14,14 +15,18 @@ class Collection:
         self.groups = []
 
     @property
-    def common_tasks(self):
-        d = [g.common_tasks for g in self.groups]
+    def intersection_of_tasks(self):
+        d = [g.intersection_of_tasks for g in self.groups]
         return list(set.intersection(*map(set, d)))
 
     @property
-    def all_tasks(self):
-        # FIXME: I think we should take the intersection of all_tasks of each group
-        d = [k for g in self.groups for k in list(g.common_tasks)]
+    def union_of_tasks(self):
+        d = [k for g in self.groups for k in list(g.union_of_tasks)]
+        return list(set(d))
+
+    @property
+    def union_of_intersections_of_tasks(self):
+        d = [k for g in self.groups for k in list(g.intersection_of_tasks)]
         return list(set(d))
 
     @property
@@ -39,20 +44,31 @@ class Collection:
         return pd.DataFrame(result).T
 
     @property
-    def all_seeds(self):
-        seeds = [file.seed for group in self.groups for file in group.complete_files]
+    def union_of_completed_seeds(self):
+        seeds = [file.seed for group in self.groups for file in group.get_files_that_completed_tasks(self.union_of_tasks)]
         return list(set(seeds))
 
     @property
-    def completed_seeds(self):
-        seeds = [set(file.seed for file in group.complete_files) for group in self.groups]
+    def intersection_of_completed_seeds(self):
+        seeds = [set(file.seed for file in group.get_files_that_completed_tasks(self.union_of_tasks)) for group in self.groups]
+        return list(set.intersection(*seeds))
+
+    @property
+    def intersection_of_any_seeds(self):
+        # Same as completed seeds, except that they don't have to be complete.
+        seeds = [set(file.seed for file in group.files) for group in self.groups]
         return list(set.intersection(*seeds))
 
 
     def add_files(self, directory):
         for filename in os.listdir(directory):
             # Gather information from filename
-            prefix, target_model, seed = filename.replace('.json', '').split('-')
+            names = filename.replace('.json', '').split('-')
+            target_model = names[-2]
+            seed = names[-1]
+            prefix = '-'.join(names[0:-2])
+
+            # print(prefix, target_model, seed)
 
             # Create or get group
             group = self.get_group(
@@ -101,7 +117,9 @@ class Collection:
 
     def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True):
         plt.style.use('seaborn')
-        seeds = list(set.intersection(set(seeds), set(self.completed_seeds))) if include_incomplete_files else seeds
+        # set_trace()
+        seeds = list(set.intersection(set(seeds), set(self.intersection_of_any_seeds))) if not include_incomplete_files else seeds
+        print(tasks, seeds, include_incomplete_files)
 
         for group in self.groups:
             task_avg = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files, seeds=seeds)
