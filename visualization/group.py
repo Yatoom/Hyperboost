@@ -108,8 +108,7 @@ class Group:
         #        > avg. run_time
         #        > avg. n_configs
 
-        group_avg = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
-        result = defaultdict(lambda: defaultdict(lambda: np.zeros(self.array_length)))
+        group_avg, group_std = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
 
         # Set the selected tasks, or use the union of all tasks by default
         if select_tasks:
@@ -134,18 +133,44 @@ class Group:
         num_tasks = len(tasks)
         count_tasks = 0
 
+        aggregated_mean = defaultdict(lambda: defaultdict(lambda: []))
+        aggregated_var = defaultdict(lambda: defaultdict(lambda: []))
+
         for task in tasks:
             count_tasks += 1
             for method in group_avg[task]:
                 d = group_avg[task][method]
-                result[method]['loss_train'] += np.array(d['loss_train']) / num_tasks
-                result[method]['loss_test'] += np.array(d['loss_test']) / num_tasks
-                result[method]['total_time'] += d['total_time'] / num_tasks
-                result[method]['run_time'] += d['run_time'] / num_tasks
-                result[method]['n_configs'] += d['n_configs'] / num_tasks
+                aggregated_mean[method]['loss_train'].append(np.array(d['loss_train']))
+                aggregated_mean[method]['loss_test'].append(np.array(d['loss_test']))
+                aggregated_mean[method]['total_time'].append(d['total_time'])
+                aggregated_mean[method]['run_time'].append(d['run_time'])
+                aggregated_mean[method]['n_configs'].append(d['n_configs'])
 
-        assert(num_tasks == count_tasks)
-        return result
+        for task in tasks:
+            count_tasks += 1
+            for method in group_std[task]:
+                d = group_std[task][method]
+                aggregated_var[method]['loss_train'].append(np.array(d['loss_train']))
+                aggregated_var[method]['loss_test'].append(np.array(d['loss_test']))
+                aggregated_var[method]['total_time'].append(d['total_time'])
+                aggregated_var[method]['run_time'].append(d['run_time'])
+                aggregated_var[method]['n_configs'].append(d['n_configs'])
+
+        means = defaultdict(dict)
+        std = defaultdict(dict)
+        for method in aggregated_mean:
+            for key in aggregated_mean[method]:
+                means[method][key] = np.mean(aggregated_mean[method][key], axis=0)
+                std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
+
+                # std[method][key] = np.array(
+
+                    # Law of total variance: mean of variance plus variance of mean
+                    # np.mean(aggregated_var[method][key], axis=0) + np.var(aggregated_mean[method][key], axis=0)
+                # )
+
+        assert (num_tasks * 2 == count_tasks)
+        return means, std
 
     def group_avg(self, include_incomplete_files=True, seeds=None):
 
@@ -181,7 +206,7 @@ class Group:
         aggregated = defaultdict(
             lambda: defaultdict(
                 lambda: defaultdict(
-                    lambda: np.zeros(array_length, )
+                    lambda: []
                 )
             )
         )
@@ -190,11 +215,24 @@ class Group:
             for task in file.fold_avg:
                 for method in file.data[task]:
                     d = file.fold_avg[task][method]
-                    aggregated[task][method]['loss_train'] += np.array(d['loss_train']) / num_files
-                    aggregated[task][method]['loss_test'] += np.array(d['loss_test']) / num_files
-                    aggregated[task][method]['total_time'] += d['total_time'] / num_files
-                    aggregated[task][method]['run_time'] += d['run_time'] / num_files
-                    aggregated[task][method]['n_configs'] += d['n_configs'] / num_files
+                    aggregated[task][method]['loss_train'].append(np.array(d['loss_train']))
+                    aggregated[task][method]['loss_test'].append(np.array(d['loss_test']))
+                    aggregated[task][method]['total_time'].append(d['total_time'])
+                    aggregated[task][method]['run_time'].append(d['run_time'])
+                    aggregated[task][method]['n_configs'].append(d['n_configs'])
 
-        self.group_avg_ = aggregated
-        return aggregated
+        means = defaultdict(
+            lambda: defaultdict(dict)
+        )
+
+        var = defaultdict(
+            lambda: defaultdict(dict)
+        )
+
+        for task in aggregated:
+            for method in aggregated[task]:
+                for key in aggregated[task][method]:
+                    means[task][method][key] = np.mean(aggregated[task][method][key], axis=0)
+                    var[task][method][key] = np.var(aggregated[task][method][key], axis=0)
+
+        return means, var

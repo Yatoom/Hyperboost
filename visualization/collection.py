@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import cufflinks as cf
-
+import numpy as np
 
 class Collection:
     def __init__(self):
@@ -115,7 +115,7 @@ class Collection:
     #     print('st plotly')
     #     st.plotly_chart(fig)
 
-    def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True):
+    def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True, show_std=False):
         plt.style.use('seaborn')
         # set_trace()
 
@@ -127,10 +127,15 @@ class Collection:
         print(tasks, seeds, include_incomplete_files)
 
         for group in self.groups:
-            task_avg = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files, seeds=seeds)
-            for algorithm in task_avg:
+            task_mean, task_std = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files, seeds=seeds)
+            for algorithm in task_mean:
                 label = f"{group.prefix}-{group.target_model}-{algorithm}"
-                plt.plot(task_avg[algorithm][f'loss_{data}'][1:], label=label)
+                mean = task_mean[algorithm][f'loss_{data}'][1:]
+                std = task_std[algorithm][f'loss_{data}'][1:]
+                x = np.arange(start=0, stop=len(mean), step=1)
+                plt.plot(mean, label=label)
+                if show_std:
+                    plt.fill_between(x=x, y1=mean-std, y2=mean+std, alpha=0.4)
         plt.legend()
         plt.xlabel('# Iterations')
         plt.ylabel('Loss')

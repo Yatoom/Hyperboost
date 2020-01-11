@@ -37,17 +37,16 @@ seeds = c.union_of_completed_seeds if subset_iterations == variables.ALL_SEEDS e
 selected_tasks = st.multiselect('Tasks selected', c.union_of_tasks, default=tasks)
 selected_seeds = st.multiselect('Seeds selected', c.union_of_completed_seeds, default=seeds)
 
-task = st.selectbox('Select task', ['all'] + selected_tasks)
-task = selected_tasks if task == 'all' else [task]
-st.write(task)
-
 # Visualize
 st.header('Results')
+task = st.selectbox('Select task', ['all'] + selected_tasks)
+task = selected_tasks if task == 'all' else [task]
+show_std = st.checkbox('Show standard deviation')
 st.subheader('Train')
-c.visualize(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files)
+c.visualize(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
 st.pyplot()
 st.subheader('Test')
-c.visualize(data='test', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files)
+c.visualize(data='test', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
 st.pyplot()
 
 # selection = st.sidebar.radio(
