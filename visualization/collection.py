@@ -118,7 +118,12 @@ class Collection:
     def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True):
         plt.style.use('seaborn')
         # set_trace()
-        seeds = list(set.intersection(set(seeds), set(self.intersection_of_any_seeds))) if not include_incomplete_files else seeds
+
+        # Including incomplete files, means that we use all seeds
+        # If we only include complete files, we need to take the intersection of completed seeds
+        if not include_incomplete_files:
+            seeds = list(set.intersection(set(seeds), set(self.intersection_of_completed_seeds)))
+
         print(tasks, seeds, include_incomplete_files)
 
         for group in self.groups:

@@ -52,7 +52,7 @@ class Group:
 
         files = []
         for f in self.files:
-            if all(task in tasks for task in tasks):
+            if all(t in f.tasks for t in tasks):
                 files.append(f)
         return files
 
@@ -120,8 +120,11 @@ class Group:
         if include_incomplete_files:
             # If we include incomplete files, we should take the intersection of tasks that are completed by the
             # incomplete files and the complete files.
+
+            # FIXME: we should not get
             intersection_of_tasks = set(self.collection.intersection_of_tasks)
             tasks = set.intersection(tasks, intersection_of_tasks)
+
         else:
             # Get all tasks, but if the current file doesn't have all tasks, we should take an intersection
             # Or not: we either take the intersection of the tasks OR we exclude incomplete file.
@@ -165,9 +168,9 @@ class Group:
         array_length = self.array_length
 
         if include_incomplete_files:
-            files = self.get_files_that_completed_tasks(self.collection.union_of_tasks)
-        else:
             files = self.files
+        else:
+            files = self.get_files_that_completed_tasks(self.collection.union_of_tasks)
 
         # Filter out files that do not have one of the included seeds
         if seeds is not None:
@@ -182,8 +185,6 @@ class Group:
                 )
             )
         )
-
-        print(num_files)
 
         for file in files:
             for task in file.fold_avg:

@@ -41,12 +41,12 @@ BENCHMARK_OUTPUT_FILE = os.path.join(BASE_DIRECTORY, "output.txt")
 """
 Directory for the benchmark results files
 """
-RESULTS_DIRECTORY = os.path.join(BASE_DIRECTORY, "results/")
+RESULTS_DIRECTORY = os.path.join(BASE_DIRECTORY, "results4/")
 
 """
 Prefix for the benchmark results files
 """
-RESULTS_PREFIX = 'formula'
+RESULTS_PREFIX = 'dist-only'
 
 """
 Maximum number of algorithm calls per configuration. SMAC's original default: 2000.

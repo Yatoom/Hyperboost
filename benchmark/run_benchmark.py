@@ -9,7 +9,7 @@ from smac.epm.rf_with_instances import RandomForestWithInstances
 
 from benchmark import config, util
 from benchmark.util import write_output, run_smac_based_optimizer
-from hyperboost.hyperboost import Hyperboost
+from hyperboost.hyperboost import Hyperboost, Method
 from smac.facade.roar_facade import ROAR
 from smac.facade.smac_hpo_facade import SMAC4HPO
 
@@ -70,7 +70,7 @@ for hpo_state in config.SEEDS:
                 ########################################################################################################
                 name = "hyperboost"
                 print(f"\n[{name}] ")
-                hpo = Hyperboost(scenario=scenario, rng=rng, tae_runner=tat, pca_components=2)
+                hpo = Hyperboost(scenario=scenario, method=Method.HYPERBOOST, rng=rng, tae_runner=tat, pca_components=2)
                 assert(type(hpo.solver.model) != RandomForestWithInstances)
                 hpo_result, info = run_smac_based_optimizer(hpo, tae)
 

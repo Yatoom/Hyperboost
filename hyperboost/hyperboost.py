@@ -3,11 +3,13 @@ from enum import Enum
 import numpy as np
 from smac.epm.util_funcs import get_types
 from smac.facade.smac_hpo_facade import SMAC4HPO
+from smac.optimizer.ei_optimization import InterleavedLocalAndRandomSearch, RandomSearch
 from smac.scenario.scenario import Scenario
 from smac.utils.constants import MAXINT
 
 from hyperboost.acquistion_function import ScorePlusDistance
 from hyperboost.hyperepm import HyperEPM
+from hyperboost.ngepm import NGEPM
 from hyperboost.skoptepm import SkoptEPM
 
 
@@ -19,6 +21,8 @@ class Method(Enum):
     # Simulate Scikit-Optimize's way of using Gradient Boosting. Builds 3 Gradient Boosting models to predict quantiles
     # 16, 84 and 50. The difference between quantile 16 and 84 divided by two is the standard deviation.
     SCIKIT_OPTIMIZE = 2
+
+    NGBOOST = 3
 
 
 class Hyperboost(SMAC4HPO):
@@ -52,3 +56,12 @@ class Hyperboost(SMAC4HPO):
 
             # Required for the newer version of SMAC.
             self.solver.model = model
+
+        elif method == Method.NGBOOST:
+            super().__init__(scenario=scenario, rng=rng, **kwargs)
+            self.solver.model = NGEPM(types=types, bounds=bounds, instance_features=scenario.feature_array,
+                                      seed=rng.randint(MAXINT), configspace=scenario.cs)
+            # self.solver.acq_optimizer = RandomSearch(
+            #     acquisition_function=self.solver.acquisition_func,
+            #     config_space=scenario.cs
+            # )
