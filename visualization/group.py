@@ -22,6 +22,9 @@ class Group:
     def id(self):
         return os.path.join(self.directory, self.prefix, self.target_model)
 
+    def label(self, method):
+        return f"{self.prefix} $\\rightarrow$ {method}"
+
     @property
     def intersection_of_tasks(self):
         d = [f.tasks for f in self.files]
@@ -197,7 +200,7 @@ class Group:
 
         for method in aggregated_mean:
             for key in aggregated_mean[method]:
-                aggregation[key][self.id + "/" + method] = aggregated_mean[method][key]
+                aggregation[key][self.label(method)] = aggregated_mean[method][key]
 
         return aggregation
 

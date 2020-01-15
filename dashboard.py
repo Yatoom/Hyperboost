@@ -20,6 +20,7 @@ st.table(c.overview)
 
 # Make a subset of the data
 st.subheader('Selection')
+target_model = st.selectbox('Target model', c.target_models)
 subset_type = st.radio(
     'Choose a subset to visualize in order to make the comparison between an existing and a running experiment fair.',
     (variables.REMOVE_INCOMPLETE, variables.TASK_INTERSECTION))
@@ -44,17 +45,21 @@ task = selected_tasks if task == 'all' else [task]
 show_std = st.checkbox('Show standard deviation')
 
 st.subheader('Train')
-c.visualize(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
+c.visualize(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files,
+            show_std=show_std, target_model=target_model)
 st.pyplot()
 
 st.subheader('Test')
-c.visualize(data='test', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
+c.visualize(data='test', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files,
+            show_std=show_std, target_model=target_model)
 st.pyplot()
 
 st.subheader('Ranked train')
-c.rank(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
+c.rank(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files,
+       show_std=show_std, target_model=target_model)
 st.pyplot()
 
 st.subheader('Ranked test')
-c.rank(data='train', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files, show_std=show_std)
+c.rank(data='test', tasks=task, seeds=selected_seeds, include_incomplete_files=include_incomplete_files,
+       show_std=show_std, target_model=target_model)
 st.pyplot()

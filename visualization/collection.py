@@ -32,18 +32,28 @@ class Collection:
         return list(set(d))
 
     @property
+    def target_models(self):
+        result = []
+        for group in self.groups:
+            result.append(group.target_model)
+        return list(set(result))
+
+    @property
     def overview(self):
         result = {}
         count = 0
         for group in self.groups:
             for file in group.files:
                 result[count] = {
-                    'Experiment': group.id,
-                    'Iteration seed': file.seed,
-                    'Tasks completed': len(file.tasks)
+                    'Directory': group.directory,
+                    'Experiment': group.prefix,
+                    'Model': group.target_model,
+                    'Iter. seed': file.seed,
+                    'Tasks': len(file.tasks)
                 }
                 count += 1
-        return pd.DataFrame(result).T
+        frame = pd.DataFrame(result).T
+        return frame
 
     @property
     def union_of_completed_seeds(self):
@@ -104,9 +114,11 @@ class Collection:
         group.files = []
         return group
 
-    def combine_key_method_values(self, select_tasks=None, include_incomplete_files=True, seeds=None):
+    def combine_key_method_values(self, select_tasks=None, include_incomplete_files=True, seeds=None, target_model=None):
         combined = defaultdict(dict)
         for group in self.groups:
+            if group.target_model != target_model:
+                continue
             r = group.get_key_method_values(select_tasks=select_tasks,
                                             include_incomplete_files=include_incomplete_files, seeds=seeds)
             for key in r:
@@ -114,11 +126,12 @@ class Collection:
                     combined[key][method] = r[key][method]
         return combined
 
-    def rank(self, data='train', tasks=None, include_incomplete_files=True, seeds=None, show_std=True):
+    def rank(self, data='train', tasks=None, include_incomplete_files=True, seeds=None, show_std=True, target_model=None):
         key = f'loss_{data}'
 
         combined = self.combine_key_method_values(select_tasks=tasks,
-                                                  include_incomplete_files=include_incomplete_files, seeds=seeds)
+                                                  include_incomplete_files=include_incomplete_files, seeds=seeds,
+                                                  target_model=target_model)
 
         first_key = list(combined[key].keys())[0]
         num_iterations =len(combined[key][first_key][0])
@@ -160,7 +173,7 @@ class Collection:
 
 
     def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True,
-                  show_std=False):
+                  show_std=False, target_model=None):
         plt.style.use('seaborn')
         # set_trace()
 
@@ -170,10 +183,12 @@ class Collection:
             seeds = list(set.intersection(set(seeds), set(self.intersection_of_completed_seeds)))
 
         for group in self.groups:
+            if group.target_model != target_model:
+                continue
             task_mean, task_std = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files,
                                                  seeds=seeds)
             for algorithm in task_mean:
-                label = f"{group.prefix}-{group.target_model}-{algorithm}"
+                label = group.label(algorithm)
                 mean = task_mean[algorithm][f'loss_{data}'][1:]
                 std = task_std[algorithm][f'loss_{data}'][1:]
                 x = np.arange(start=0, stop=len(mean), step=1)
