@@ -166,7 +166,7 @@ class Collection:
 
         plt.legend()
         plt.xlabel('# Iterations')
-        plt.ylabel('Loss')
+        plt.ylabel('Rank (lower is better)')
         # plt.title(data)
         plt.show()
 
