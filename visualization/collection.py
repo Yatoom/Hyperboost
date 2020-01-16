@@ -114,68 +114,65 @@ class Collection:
         group.files = []
         return group
 
-    def combine_key_method_values(self, select_tasks=None, include_incomplete_files=True, seeds=None, target_model=None):
-        combined = defaultdict(dict)
+    def ranker(self, seeds=None, data='train', tasks=None, include_incomplete_files=True, target_model=None):
+
+        collected = []
+        num_steps = 0
+
         for group in self.groups:
+
+            # Skip group if it doesn't have the selected target model
             if group.target_model != target_model:
                 continue
-            r = group.get_key_method_values(select_tasks=select_tasks,
-                                            include_incomplete_files=include_incomplete_files, seeds=seeds)
-            for key in r:
-                for method in r[key]:
-                    combined[key][method] = r[key][method]
-        return combined
 
-    def rank(self, data='train', tasks=None, include_incomplete_files=True, seeds=None, show_std=True, target_model=None):
-        key = f'loss_{data}'
+            # For now, we are only concerned with the target model, and nothing else.
+            collected.append([file.fold_avg for file in group.files])
 
-        combined = self.combine_key_method_values(select_tasks=tasks,
-                                                  include_incomplete_files=include_incomplete_files, seeds=seeds,
-                                                  target_model=target_model)
+        num_steps = self.groups[0].files[0].array_length
 
-        first_key = list(combined[key].keys())[0]
-        num_iterations =len(combined[key][first_key][0])
-        num_tasks = len(combined[key][first_key])
+        num_iterations = len(collected[0])
+        task_list = self.intersection_of_tasks if include_incomplete_files else self.union_of_tasks
+        task_list = task_list if not tasks else set.intersection(set(tasks), set(task_list))
 
-        ranked = defaultdict(
-                lambda: defaultdict(
-                    list
-                )
-        )
-        # We need to make a separate ranking for every task for every step
-        for iteration in range(num_iterations):
-            for task in range(num_tasks):
-                data = [combined[key][method][task][iteration] for method in combined[key]]
-                ranked_data = rankdata(data)
-                for i, method in enumerate(combined[key]):
-                    ranked[method][task].append(ranked_data[i])
+        # For each iteration
+        for i in range(num_iterations):
+            # For each task
+            for t in task_list:
+                # For each step
+                for s in range(num_steps):
+                    # Rank across all files, skip if the group does not have enough files.
+                    # `m` is for method, e.g. SMAC, Hyperboost, ROAR, etc.
+                    ranks = rankdata(
+                        [group[i][t][m][f'loss_{data}'][s] for group in collected if i < len(group) for m in
+                         group[i][t]])
 
-        # Take average
-        mean_rank = dict()
-        std_rank = dict()
-        plt.style.use('seaborn')
-        for method in ranked:
+                    # And now put it back
+                    counter = 0
+                    for index, group in enumerate(collected):
+                        if i >= len(group):
+                            continue
+                        for m in group[i][t]:
+                            collected[index][i][t][m][f'loss_{data}'][s] = ranks[counter]
+                            counter += 1
 
-            mean_rank[method] = np.mean(list(ranked[method].values()), axis=0)
-            std_rank[method] = np.std(list(ranked[method].values()), axis=0)
+        # Put it back?
+        for group_index, group in enumerate(self.groups):
 
-            plt.plot(mean_rank[method], label=method)
-            if show_std:
-                x = np.arange(start=0, stop=len(mean_rank[method]), step=1)
-                plt.fill_between(x, mean_rank[method] - std_rank[method], mean_rank[method] + std_rank[method], alpha=0.2)
+            # Skip group if it doesn't have the selected target model
+            if group.target_model != target_model:
+                continue
 
-        plt.legend()
-        plt.xlabel('# Iterations')
-        plt.ylabel('Rank (lower is better)')
-        # plt.title(data)
-        plt.show()
-
-
+            for file_index, file in enumerate(group.files):
+                file.fold_rank = collected[group_index][file_index]
 
     def visualize(self, data='train', method='avg', tasks=None, seeds=None, include_incomplete_files=True,
-                  show_std=False, target_model=None):
+                  show_std=False, target_model=None, ranked=False):
         plt.style.use('seaborn')
         # set_trace()
+
+        if ranked:
+            self.ranker(seeds=seeds, data=data, tasks=tasks, include_incomplete_files=include_incomplete_files,
+                        target_model=target_model)
 
         # Including incomplete files, means that we use all seeds
         # If we only include complete files, we need to take the intersection of completed seeds
@@ -186,7 +183,7 @@ class Collection:
             if group.target_model != target_model:
                 continue
             task_mean, task_std = group.task_avg(select_tasks=tasks, include_incomplete_files=include_incomplete_files,
-                                                 seeds=seeds)
+                                                 seeds=seeds, ranked=ranked)
             for algorithm in task_mean:
                 label = group.label(algorithm)
                 mean = task_mean[algorithm][f'loss_{data}'][1:]

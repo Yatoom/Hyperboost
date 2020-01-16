@@ -74,11 +74,11 @@ c.visualize(data='test', tasks=task, seeds=seeds, include_incomplete_files=inclu
 st.pyplot()
 
 st.subheader('Training ranks')
-c.rank(data='train', tasks=task, seeds=seeds, include_incomplete_files=include_incomplete_files,
-       show_std=show_std, target_model=target_model)
+c.visualize(data='train', tasks=task, seeds=seeds, include_incomplete_files=include_incomplete_files,
+            show_std=show_std, target_model=target_model, ranked=True)
 st.pyplot()
 
 st.subheader('Testing ranks')
-c.rank(data='test', tasks=task, seeds=seeds, include_incomplete_files=include_incomplete_files,
-       show_std=show_std, target_model=target_model)
+c.visualize(data='test', tasks=task, seeds=seeds, include_incomplete_files=include_incomplete_files,
+            show_std=show_std, target_model=target_model, ranked=True)
 st.pyplot()

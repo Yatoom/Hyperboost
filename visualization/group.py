@@ -75,7 +75,7 @@ class Group:
         )
 
     @staticmethod
-    def collapse_iterations(files):
+    def collapse_iterations(files, ranked=False):
         # INPUT:
         #
         # file > task > method > avg. loss_train
@@ -101,9 +101,10 @@ class Group:
         )
 
         for file in files:
-            for task in file.fold_avg:
+            target = file.fold_rank if ranked else file.fold_avg
+            for task in target:
                 for method in file.data[task]:
-                    d = file.fold_avg[task][method]
+                    d = target[task][method]
                     aggregated[task][method]['loss_train'].append(np.array(d['loss_train']))
                     aggregated[task][method]['loss_test'].append(np.array(d['loss_test']))
                     aggregated[task][method]['total_time'].append(d['total_time'])
@@ -173,40 +174,7 @@ class Group:
 
         return files
 
-    def get_key_method_values(self, select_tasks=None, include_incomplete_files=True, seeds=None):
-        # INPUT: (group_avg)
-        #
-        # task > method > avg. loss_train
-        #               > avg. loss_test
-        #               > avg. total_time
-        #               > avg. run_time
-        #               > avg. n_configs
-        #
-        # OUTPUT: (aggregation)
-        #
-        # loss_train > method > (num_tasks, num_iterations)
-        # loss_test > method > (num_tasks, num_iterations)
-        # total_time > method > list of length num_tasks
-        # run_time > method > list of length num_tasks
-
-        # Get average and standard deviation over iterations
-        group_avg, group_std = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
-
-        # Set the selected tasks, or use the union of all tasks by default
-        tasks = self.subset_tasks(select_tasks=select_tasks, include_incomplete_files=include_incomplete_files)
-
-        aggregated_mean = self.collapse_tasks(group_avg, tasks)
-        aggregation = defaultdict(dict)
-
-        for method in aggregated_mean:
-            for key in aggregated_mean[method]:
-                aggregation[key][self.label(method)] = aggregated_mean[method][key]
-
-        return aggregation
-
-
-
-    def task_avg(self, select_tasks=None, include_incomplete_files=True, seeds=None):
+    def task_avg(self, select_tasks=None, include_incomplete_files=True, seeds=None, ranked=False):
 
         # INPUT: (group_avg, group_std)
         #
@@ -225,7 +193,7 @@ class Group:
         #        > avg. n_configs
 
         # Get average and standard deviation over iterations
-        group_avg, group_std = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds)
+        group_avg, group_std = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds, ranked=ranked)
 
         # Set the selected tasks, or use the union of all tasks by default
         tasks = self.subset_tasks(select_tasks=select_tasks, include_incomplete_files=include_incomplete_files)
@@ -244,7 +212,7 @@ class Group:
 
         return means, std
 
-    def group_avg(self, include_incomplete_files=True, seeds=None):
+    def group_avg(self, include_incomplete_files=True, seeds=None, ranked=False):
 
         # INPUT:
         #
@@ -266,7 +234,7 @@ class Group:
         files = self.subset_seeds(seeds=seeds, include_incomplete_files=include_incomplete_files)
 
         # Collapse iterations
-        aggregated = self.collapse_iterations(files)
+        aggregated = self.collapse_iterations(files, ranked=ranked)
 
         # Setup default dictionaries for means and vars
         means = defaultdict(lambda: defaultdict(dict))
