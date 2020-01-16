@@ -1,8 +1,6 @@
-import copy
 from collections import defaultdict
 from dataclasses import dataclass
 import os
-from pdb import set_trace
 
 import numpy as np
 
@@ -11,7 +9,7 @@ import numpy as np
 class Group:
     directory: str
     prefix: str
-    target_model: str
+    target_name: str
     collection: object
     files: list = None
 
@@ -20,7 +18,7 @@ class Group:
 
     @property
     def id(self):
-        return os.path.join(self.directory, self.prefix, self.target_model)
+        return os.path.join(self.directory, self.prefix, self.target_name)
 
     def label(self, method):
         return f"{self.prefix} $\\rightarrow$ {method}"
@@ -35,30 +33,6 @@ class Group:
         d = [k for f in self.files for k in f.tasks]
         return list(set(d))
 
-    def get_files_that_completed_tasks(self, tasks=None):
-        """
-        Retrieve a list of files that completed the given tasks.
-
-        Parameters
-        ----------
-        tasks: list, default = self.collection.union_of_tasks
-            A list of files to check.
-
-        Returns
-        -------
-        files: list
-            A list of files that completed the given tasks.
-        """
-
-        if tasks is None:
-            tasks = self.collection.union_of_tasks
-
-        files = []
-        for f in self.files:
-            if all(t in f.tasks for t in tasks):
-                files.append(f)
-        return files
-
     @property
     def union_of_seeds(self):
         return [file.seed for file in self.files]
@@ -71,7 +45,7 @@ class Group:
         return (
                 self.directory == other.directory and
                 self.prefix == other.prefix and
-                self.target_model == other.target_model
+                self.target_name == other.target_name
         )
 
     @staticmethod
@@ -113,8 +87,7 @@ class Group:
 
         return aggregated
 
-    @staticmethod
-    def collapse_tasks(input, tasks):
+    def collapse_tasks(self, input):
         # INPUT:
         #
         # task > method > avg. loss_train
@@ -132,7 +105,7 @@ class Group:
         #        > [n_configs, n_configs, ...]
 
         aggregated = defaultdict(lambda: defaultdict(lambda: []))
-        for task in tasks:
+        for task in self.collection.tasks:
             for method in input[task]:
                 d = input[task][method]
                 aggregated[method]['loss_train'].append(np.array(d['loss_train']))
@@ -142,39 +115,7 @@ class Group:
 
         return aggregated
 
-    def subset_tasks(self, select_tasks=None, include_incomplete_files=True):
-        if select_tasks:
-            tasks = set(select_tasks)
-        else:
-            tasks = set(self.collection.union_of_tasks)
-
-        if include_incomplete_files:
-            # If we include incomplete files, we should take the intersection of tasks that are completed by the
-            # incomplete files and the complete files.
-            intersection_of_tasks = set(self.collection.intersection_of_tasks)
-            tasks = set.intersection(tasks, intersection_of_tasks)
-
-        else:
-            # Get all tasks, but if the current file doesn't have all tasks, we should take an intersection
-            # Or not: we either take the intersection of the tasks OR we exclude incomplete file.
-            union_of_tasks = set(self.union_of_tasks)
-            tasks = set.intersection(tasks, union_of_tasks)
-        return tasks
-
-    def subset_seeds(self, seeds=None, include_incomplete_files=True):
-
-        if include_incomplete_files:
-            files = self.files
-        else:
-            files = self.get_files_that_completed_tasks(self.collection.union_of_tasks)
-
-        # Filter out files that do not have one of the included seeds
-        if seeds is not None:
-            files = [file for file in files if file.seed in seeds]
-
-        return files
-
-    def task_avg(self, select_tasks=None, include_incomplete_files=True, seeds=None, ranked=False):
+    def task_avg(self, ranked=False):
 
         # INPUT: (group_avg, group_std)
         #
@@ -193,14 +134,12 @@ class Group:
         #        > avg. n_configs
 
         # Get average and standard deviation over iterations
-        group_avg, group_std = self.group_avg(include_incomplete_files=include_incomplete_files, seeds=seeds, ranked=ranked)
+        group_avg, group_std = self.group_avg(ranked=ranked)
 
         # Set the selected tasks, or use the union of all tasks by default
-        tasks = self.subset_tasks(select_tasks=select_tasks, include_incomplete_files=include_incomplete_files)
-
         # Collapse group_avg and group_std
-        aggregated_mean = self.collapse_tasks(group_avg, tasks)
-        aggregated_var = self.collapse_tasks(group_std, tasks)
+        aggregated_mean = self.collapse_tasks(group_avg)
+        aggregated_var = self.collapse_tasks(group_std)
 
         # Calculate the mean and average std for each task
         means = defaultdict(dict)
@@ -212,7 +151,7 @@ class Group:
 
         return means, std
 
-    def group_avg(self, include_incomplete_files=True, seeds=None, ranked=False):
+    def group_avg(self, ranked=False):
 
         # INPUT:
         #
@@ -230,11 +169,8 @@ class Group:
         #               > avg. run_time
         #               > avg. n_configs
 
-        # Take a subset of the seeds depending on the seeds given and whether we should include incomplete files
-        files = self.subset_seeds(seeds=seeds, include_incomplete_files=include_incomplete_files)
-
         # Collapse iterations
-        aggregated = self.collapse_iterations(files, ranked=ranked)
+        aggregated = self.collapse_iterations(self.files, ranked=ranked)
 
         # Setup default dictionaries for means and vars
         means = defaultdict(lambda: defaultdict(dict))
