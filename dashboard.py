@@ -5,13 +5,13 @@ import pandas as pd
 
 from benchmark.config import TASKS, SEEDS
 from visualization import Collection, variables
+from benchmark import config
 
 c = Collection()
 c = c.add_files('b/')
-# c = c.add_files('output/results4/')
-
-num_iterations = len(os.listdir('output/results3/'))
-num_seeds = len(SEEDS)
+output_dir = os.path.join('visualization', config.RESULTS_DIRECTORY)
+if os.path.exists(output_dir):
+    c = c.add_files(output_dir)
 
 # Show overview of the data we have available
 st.table(c.overview)

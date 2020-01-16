@@ -194,6 +194,9 @@ class Collection:
                     plt.fill_between(x=x, y1=mean - std, y2=mean + std, alpha=0.4)
         plt.legend()
         plt.xlabel('# Iterations')
-        plt.ylabel('Loss')
+        if ranked:
+            plt.ylabel('Ranked (lower is better)')
+        else:
+            plt.ylabel('Loss')
         # plt.title(data)
         plt.show()
