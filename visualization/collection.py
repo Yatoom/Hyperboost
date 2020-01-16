@@ -1,4 +1,6 @@
+import copy
 import os
+from _warnings import warn
 from collections import defaultdict
 from pdb import set_trace
 
@@ -15,6 +17,31 @@ from scipy.stats import rankdata
 class Collection:
     def __init__(self):
         self.groups = []
+
+    def filter(self, tasks):
+
+        # Make a copy of itself
+        c = copy.copy(self)
+
+        for gi, g in enumerate(self.groups):
+            for fi, f in enumerate(g.files):
+
+                # Filter out tasks that are not in the list
+                intersection = set.intersection(set(f.tasks), set(tasks))
+                c.groups[gi].files[fi].tasks = list(intersection)
+
+                # Drop file if it does not have all tasks available
+                if len(intersection) < len(tasks):
+                    drop = c.groups[gi].files[fi]
+                    path = os.path.join(drop.group.directory, drop.filename)
+                    warn(f'{path} does not have all tasks available, dropping...')
+                    c.groups[gi].files[fi] = None
+
+            # Remove the files that were replaced with None
+            c.groups[gi].files = [i for i in c.groups[gi].files if i is not None]
+
+        return c
+
 
     @property
     def intersection_of_tasks(self):
