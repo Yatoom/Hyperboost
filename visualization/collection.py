@@ -120,8 +120,11 @@ class Collection:
     def calculate_ranks(self, data='train'):
 
         collected = [[file.fold_avg for file in group.files] for group in self.groups]
+        result = copy.deepcopy(collected)
         num_steps = self.groups[0].files[0].array_length
         num_iterations = len(collected[0])
+
+        print('num_iterations', num_iterations)
 
         # For each iteration
         for i in range(num_iterations):
@@ -129,26 +132,32 @@ class Collection:
             for t in self.tasks:
                 # For each step
                 for s in range(num_steps):
-                    # Rank across all files, skip if the group does not have enough files.
-                    # `m` is for method, e.g. SMAC, Hyperboost, ROAR, etc.
-                    ranks = rankdata(
-                        [group[i][t][m][f'loss_{data}'][s] for group in collected if i < len(group) for m in
-                         group[i][t]])
+
+                    # Rank across all files, cap i if the group does not have enough files.
+                    array_for_ranking = []
+                    for group in collected:
+                        i_capped = min(i, len(group) - 1)
+                        for method in group[i_capped][t]:
+                            d = group[i_capped][t][method][f'loss_{data}'][s]
+                            array_for_ranking.append(d)
+
+                    ranks = rankdata(array_for_ranking)
 
                     # And now put it back
                     counter = 0
                     for index, group in enumerate(collected):
-                        if i >= len(group):
-                            continue
-                        for m in group[i][t]:
-                            collected[index][i][t][m][f'loss_{data}'][s] = ranks[counter]
+                        i_capped = min(i, len(group) - 1)
+                        # if i >= len(group):
+                        #     continue
+                        for m in group[i_capped][t]:
+                            result[index][i_capped][t][m][f'loss_{data}'][s] = ranks[counter]
                             counter += 1
 
         # Put it back?
         for group_index, group in enumerate(self.groups):
 
             for file_index, file in enumerate(group.files):
-                file.fold_rank = collected[group_index][file_index]
+                file.fold_rank = result[group_index][file_index]
 
         return self
 
