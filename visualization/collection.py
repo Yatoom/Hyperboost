@@ -1,15 +1,11 @@
 import copy
 import os
 from _warnings import warn
-from collections import defaultdict
-from pdb import set_trace
+import plotly.graph_objects as go
 
 from visualization import File, Group
-import matplotlib.pyplot as plt
 import pandas as pd
-import plotly.express as px
 import streamlit as st
-import cufflinks as cf
 import numpy as np
 from scipy.stats import rankdata
 
@@ -17,6 +13,23 @@ from scipy.stats import rankdata
 class Collection:
     def __init__(self):
         self.groups = []
+
+        self.colors = [
+            'rgba(31, 119, 180, {})',  # muted blue
+            'rgba(255, 127, 14, {})',  # safety orange
+            'rgba(44, 160, 44, {})',  # cooked asparagus green
+            'rgba(214, 39, 40, {})',  # brick red
+            'rgba(148, 103, 189, {})',  # muted purple
+            'rgba(140, 86, 75, {})',  # chestnut brown
+            'rgba(227, 119, 194, {})',  # raspberry yogurt pink
+            'rgba(127, 127, 127, {})',  # middle gray
+            'rgba(188, 189, 34, {})',  # curry yellow-green
+            'rgba(23, 190, 207, {})'  # blue-teal
+        ]
+
+    def get_color(self, num, alpha):
+        num = num % len(self.colors)
+        return self.colors[num].format(alpha)
 
     def filter(self, tasks, target_name=None):
 
@@ -44,6 +57,8 @@ class Collection:
 
             # Remove the files that were replaced with None
             c.groups[gi].files = [i for i in c.groups[gi].files if i is not None]
+
+        c.groups = [group for group in c.groups if len(group.files) > 0]
 
         return c
 
@@ -124,8 +139,6 @@ class Collection:
         num_steps = self.groups[0].files[0].array_length
         num_iterations = len(collected[0])
 
-        print('num_iterations', num_iterations)
-
         # For each iteration
         for i in range(num_iterations):
             # For each task
@@ -147,8 +160,6 @@ class Collection:
                     counter = 0
                     for index, group in enumerate(collected):
                         i_capped = min(i, len(group) - 1)
-                        # if i >= len(group):
-                        #     continue
                         for m in group[i_capped][t]:
                             result[index][i_capped][t][m][f'loss_{data}'][s] = ranks[counter]
                             counter += 1
@@ -162,8 +173,8 @@ class Collection:
         return self
 
     def visualize(self, data='train', show_std=False, ranked=False):
-        plt.style.use('seaborn')
-
+        f = go.FigureWidget()
+        color_counter = 0
         if ranked:
             self.calculate_ranks(data=data)
 
@@ -177,15 +188,31 @@ class Collection:
                 mean = task_mean[algorithm][f'loss_{data}'][1:]
                 std = task_std[algorithm][f'loss_{data}'][1:]
                 x = np.arange(start=0, stop=len(mean), step=1)
-                plt.plot(mean, label=label)
+                solid_color = self.get_color(color_counter, 1)
+                transparent_color = self.get_color(color_counter, 0.5)
+                color_counter += 1
+                f.add_scattergl(y=list(mean), name=label, line_color=solid_color)
 
                 if show_std:
-                    plt.fill_between(x=x, y1=mean - std, y2=mean + std, alpha=0.4)
+                    scat1 = go.Scatter(
+                        y=mean - std,
+                        name=label,
+                        # fillcolor=transparent_color,
+                        line=dict(color='rgba(255,255,255,0)'),
+                        showlegend=False)
+                    scat2 = go.Scatter(
+                        y=mean + std,
+                        name=label,
+                        fill='tonexty',
+                        fillcolor=transparent_color,
+                        line=dict(color='rgba(255,255,255,0)'),
+                        showlegend=False)
+                    f.add_trace(scat1)
+                    f.add_trace(scat2)
 
-        plt.legend()
-        plt.xlabel('# Iterations')
-        if ranked:
-            plt.ylabel('Ranked (lower is better)')
-        else:
-            plt.ylabel('Loss')
-        plt.show()
+        f.update_layout(
+            title=f"Average {'ranking' if ranked else 'loss'} on {data} data ",
+            xaxis_title="Iteration",
+            yaxis_title="Ranked (lower is better)" if ranked else "Loss",
+        )
+        return st.plotly_chart(f)

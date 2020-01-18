@@ -21,7 +21,7 @@ class Group:
         return os.path.join(self.directory, self.prefix, self.target_name)
 
     def label(self, method):
-        return f"{self.prefix} $\\rightarrow$ {method}"
+        return f"{self.prefix} > {method}"
 
     @property
     def intersection_of_tasks(self):

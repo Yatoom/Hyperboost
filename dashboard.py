@@ -41,18 +41,7 @@ if show_input:
         ---
     """)
 
-st.subheader('Training loss')
 c.visualize(data='train', show_std=show_std)
-st.pyplot()
-
-st.subheader('Testing loss')
 c.visualize(data='test', show_std=show_std)
-st.pyplot()
-
-st.subheader('Training ranks')
-c.visualize(data='train', show_std=show_std, ranked=True)
-st.pyplot()
-
-st.subheader('Testing ranks')
-c.visualize(data='test', show_std=show_std, ranked=True)
-st.pyplot()
+c.visualize(data='train', ranked=True, show_std=show_std)
+c.visualize(data='test', ranked=True, show_std=show_std)
