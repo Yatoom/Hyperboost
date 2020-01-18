@@ -48,8 +48,10 @@ st.markdown("""
     The graphs below show train and test losses. The standard deviation of an HPO-experiment is calculated on 
     task-level over each benchmark iteration. These standard deviations are then averaged over all tasks.
 """)
-c.visualize(data='train', show_std=show_std)
-c.visualize(data='test', show_std=show_std)
+train_graph, table = c.visualize(data='train', show_std=show_std)
+test_graph, _ = c.visualize(data='test',  show_std=show_std)
+st.plotly_chart(train_graph)
+st.plotly_chart(test_graph)
 
 st.subheader("Average ranking")
 st.markdown("""
@@ -57,5 +59,16 @@ st.markdown("""
     iterations are temporarily filled in with last available iteration. The ranks are then averaged over the benchmark 
     iterations and tasks. The standard deviation of each HPO-experiment is calculated globally over each task.
 """)
-c.visualize(data='train', ranked=True, show_std=show_std, global_std=True)
-c.visualize(data='test', ranked=True, show_std=show_std, global_std=True)
+train_graph, _ = c.visualize(data='train', ranked=True, show_std=show_std, global_std=True)
+test_graph, _ = c.visualize(data='test', ranked=True, show_std=show_std, global_std=True)
+st.plotly_chart(train_graph)
+st.plotly_chart(test_graph)
+
+st.subheader("Average run times")
+st.markdown("""
+    The table below shows the average run time for the HPO-experiment per task. The `avg. target eval. time` is the 
+    average time that is spend on running the target algorithm/function to evaluate a hyperparameter configuration 
+    sample. The standard deviation the run times are calculated on task-level over each benchmark iteration. 
+    These standard deviations are then averaged over all tasks.
+""")
+st.table(table)

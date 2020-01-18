@@ -155,14 +155,7 @@ class Group:
                 if global_std:
                     std[method][key] = np.std(agg_means, axis=0)
                 else:
-                    # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
                     std[method][key] = np.mean(agg_std, axis=0)
-
-                # law_of_total_variance = np.mean(agg_vars, axis=0) + np.var(agg_means, axis=0)
-                # std[method][key] = np.sqrt(law_of_total_variance)
-
-                # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
-                # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
 
         return means, std
 

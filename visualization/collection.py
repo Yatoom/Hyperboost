@@ -178,6 +178,9 @@ class Collection:
         if ranked:
             self.calculate_ranks(data=data)
 
+        # Additional table
+        table = {}
+
         # Including incomplete files, means that we use all seeds
         # If we only include complete files, we need to take the intersection of completed seeds
         for group in self.groups:
@@ -188,6 +191,14 @@ class Collection:
                 mean = task_mean[algorithm][f'loss_{data}'][1:]
                 std = task_std[algorithm][f'loss_{data}'][1:]
                 x = np.arange(start=0, stop=len(mean), step=1)
+
+                # Write to table
+                table[label] = {
+                    'avg. total runtime': f"{task_mean[algorithm]['total_time'] : .2f} ± {task_std[algorithm]['total_time'] :.2f}",
+                    'avg. target eval. time': f"{task_mean[algorithm]['run_time'] : .2f} ± {task_std[algorithm]['run_time'] :.2f}",
+                }
+
+                # Plotting
                 solid_color = self.get_color(color_counter, 1)
                 transparent_color = self.get_color(color_counter, 0.5)
                 color_counter += 1
@@ -215,4 +226,7 @@ class Collection:
             xaxis_title="Iteration",
             yaxis_title="Ranked (lower is better)" if ranked else "Loss",
         )
-        return st.plotly_chart(f)
+
+        return f, pd.DataFrame(table).T
+        # st.plotly_chart(f)
+        # st.table()
