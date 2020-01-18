@@ -115,7 +115,7 @@ class Group:
 
         return aggregated
 
-    def task_avg(self, ranked=False):
+    def task_avg(self, ranked=False, global_std=False):
 
         # INPUT: (group_avg, group_std)
         #
@@ -146,8 +146,23 @@ class Group:
         std = defaultdict(dict)
         for method in aggregated_mean:
             for key in aggregated_mean[method]:
-                means[method][key] = np.mean(aggregated_mean[method][key], axis=0)
-                std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
+                agg_vars = aggregated_var[method][key]
+                agg_std = np.sqrt(agg_vars)
+                agg_means = aggregated_mean[method][key]
+
+                means[method][key] = np.mean(agg_means, axis=0)
+
+                if global_std:
+                    std[method][key] = np.std(agg_means, axis=0)
+                else:
+                    # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
+                    std[method][key] = np.mean(agg_std, axis=0)
+
+                # law_of_total_variance = np.mean(agg_vars, axis=0) + np.var(agg_means, axis=0)
+                # std[method][key] = np.sqrt(law_of_total_variance)
+
+                # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
+                # std[method][key] = np.mean(np.sqrt(aggregated_var[method][key]), axis=0)
 
         return means, std
 

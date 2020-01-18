@@ -84,7 +84,7 @@ class Collection:
                 result[count] = {
                     'Directory': group.directory,
                     'Experiment': group.prefix,
-                    'Model': group.target_name,
+                    'Target': group.target_name,
                     'Iter. seed': file.seed,
                     'Tasks': len(file.tasks)
                 }
@@ -172,7 +172,7 @@ class Collection:
 
         return self
 
-    def visualize(self, data='train', show_std=False, ranked=False):
+    def visualize(self, data='train', show_std=False, ranked=False, global_std=False):
         f = go.FigureWidget()
         color_counter = 0
         if ranked:
@@ -181,7 +181,7 @@ class Collection:
         # Including incomplete files, means that we use all seeds
         # If we only include complete files, we need to take the intersection of completed seeds
         for group in self.groups:
-            task_mean, task_std = group.task_avg(ranked=ranked)
+            task_mean, task_std = group.task_avg(ranked=ranked, global_std=global_std)
 
             for algorithm in task_mean:
                 label = group.label(algorithm)
