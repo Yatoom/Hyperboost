@@ -1,5 +1,6 @@
 import typing
 from math import sqrt
+from pprint import pprint
 
 import numpy as np
 from lightgbm import LGBMRegressor
@@ -55,6 +56,8 @@ class HyperEPM(AbstractEPM):
         else:
             self.pca_ = None
 
+        self.distance_stats = None
+
     def _train(self, X, y):
         self.X = X
         self.y = y
@@ -78,6 +81,31 @@ class HyperEPM(AbstractEPM):
                 # self.max_distance = new_max_distance
 
         self.kdtree = cKDTree(self.X_transformed)
+        self.distance_stats = self._estimate_distance_statistics()
+        pprint(self.distance_stats)
+
+    # def _avg_distance(self):
+    #     points = np.random.random((10000, self.X_transformed.shape[1]))
+    #     distances, indices = self.kdtree.query(points, k=1)
+    #     return np.mean(distances)
+
+    def _estimate_distance_statistics(self):
+
+        sample = self.configspace.sample_configuration(10000)
+        sample = [i._vector for i in sample]
+        sample = self.pca_.transform(sample)
+
+        # FIXME: X_transformed points are not within 1x1 square
+        # points = np.random.random((10000, self.X_transformed.shape[1]))
+        distances, indices = self.kdtree.query(sample, k=1)
+        return {
+            'max_possible': self.max_distance,
+            'mean': np.mean(distances),
+            'max': np.max(distances),
+            'min': np.min(distances),  # Should be close to zero
+            'median': np.median(distances),
+            'std': np.std(distances)
+        }
 
     def _predict(self, X):
 
@@ -105,7 +133,7 @@ class HyperEPM(AbstractEPM):
         distances, indices = self.kdtree.query(X_transformed, k=1, p=2)
 
         # Transform distance to scale 0-1.
-        normalized_distance = distances.reshape(-1) / self.max_distance
+        normalized_distance = distances.reshape(-1) / self.distance_stats['max']  # Replace by avg_distance here?
 
         # Transform loss to scale (-1, 0).
         normalized_loss = self.y_scaler.transform(np.atleast_2d(loss))[0]

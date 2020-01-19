@@ -6,6 +6,7 @@ import streamlit as st
 
 c = Collection()
 c = c.add_files('b/')
+c = c.add_files('output/results8/')
 output_dir = os.path.join('visualization', config.RESULTS_DIRECTORY)
 if os.path.exists(output_dir):
     c = c.add_files(output_dir)
