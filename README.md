@@ -52,16 +52,12 @@ These can be found and edited in the `param_spaces.py` file.
 
 **How does the directory structure look?** 
 
-```
-  benchmark/
-  ├ config.py                   - Configuration for the benchmark
-  ├ group.py                    - Helps visualize_group.py to group files together
-  ├ param_spaces.py             - Parameter spaces to include in the benchmark
-  ├ run_benchmark.py            - Execute this file to run the benchmark
-  ├ util.py                     - Helper functions for the benchmark
-  ├ visualize_group.py          - Visualize a group of result files
-  ├ visualize_single_file.py    - Visualize a single result file
-  └ visualize_util.py           - Helpers for visualization
+``` 
+benchmark/
+├── config.py         - Configuration for the benchmark
+├── param_spaces.py   - Parameter spaces to include in the benchmark
+├── run_benchmark.py  - Execute this file to run the benchmark
+└── util.py           - Helper functions for the benchmark
 ```
 
 **How do I execute a benchmark?**    
@@ -69,6 +65,13 @@ If you are working with an IDE, you can just open the project and execute the `r
 
 **How do I keep track of the progress?**   
 There are three ways you could track the progress.
+
+1. Via the dashboard. Make sure to select the option `Use intersection of completed tasks` and tick `show overview of experiments`.
+![](pictures/overview.png). The dashboard can be activated using:
+```bash
+streamlit run dashboard.py
+```
+
 1. In the `smac_output` folder, you can see the output produced by SMAC. 
 
 2. In the `output.txt` file, we first print the task which the benchmark is running currently, and then the final 
@@ -109,7 +112,13 @@ task id > HPO method > [
                        ]
 ```
 
-**How do I visualize the results?**   
-The easiest way is to use `benchmark/visualize_single_file.py`, which is only capable of visualizing a single
-json-file. Visualizing a group of files can be done using `benchmark/visualize_single_file.py`, which looks for files 
-with a given prefix or inside a certain directory. 
+**How do I visualize the results?**    
+Simply run:
+```bash
+streamlit run dashboard.py
+```
+You will see an interactive dashboard with interactive plots (showing loss, ranking, etc.) where you can visualize all experiments executed 
+up to this point. Even incomplete experiments can be shown by taking the intersection of tasks that are completed by all experiments
+or by removing incomplete benchmark iterations.
+
+![](pictures/dashboard.png)
