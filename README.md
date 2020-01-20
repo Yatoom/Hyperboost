@@ -67,14 +67,9 @@ If you are working with an IDE, you can just open the project and execute the `r
 There are three ways you could track the progress.
 
 1. Via the dashboard. Make sure to select the option `Use intersection of completed tasks` and tick `show overview of experiments`.
-![](pictures/overview.png). The dashboard can be activated using:
-```bash
-streamlit run dashboard.py
-```
-
-1. In the `smac_output` folder, you can see the output produced by SMAC. 
-
-2. In the `output.txt` file, we first print the task which the benchmark is running currently, and then the final 
+![](pictures/overview.png). The dashboard can be activated using: ```streamlit run dashboard.py```
+2. In the `smac_output` folder, you can see the output produced by SMAC. 
+3. In the `output.txt` file, we first print the task which the benchmark is running currently, and then the final 
 running time, train loss and test loss per HPO method. Example ouput for one task:
     ```text
     Task 125920
@@ -91,7 +86,7 @@ running time, train loss and test loss per HPO method. Example ouput for one tas
     [roar_x2] time=51.709378719329834 train_loss=0.44436076994900525 test_loss=0.3999503968253969
     ```  
     Note: this file shows a new paragraph for each of the inner-folds.
-3. In the command line interface we print a:
+4. In the command line interface we print a:
    - `.` when the configuration is ready to be tested
    - `,` to indicate model initialization with this configuration completed
    - `;` to indicate cross validation with this model instance is finished
