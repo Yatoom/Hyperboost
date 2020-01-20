@@ -95,8 +95,6 @@ class HyperEPM(AbstractEPM):
         sample = [i._vector for i in sample]
         sample = self.pca_.transform(sample)
 
-        # FIXME: X_transformed points are not within 1x1 square
-        # points = np.random.random((10000, self.X_transformed.shape[1]))
         distances, indices = self.kdtree.query(sample, k=1)
         return {
             'max_possible': self.max_distance,

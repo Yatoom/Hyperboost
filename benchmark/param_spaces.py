@@ -5,7 +5,6 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
-
 class ParamSpace:
     def __init__(self):
 
@@ -88,7 +87,8 @@ class GradientBoostingSpace(ParamSpace):
             UniformIntegerHyperparameter("max_depth", 3, 12, default_value=12),
             UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
             UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
-            CategoricalHyperparameter('boosting_type', choices=["gbdt", "dart", "goss"])
+            CategoricalHyperparameter('boosting_type', choices=["gbdt", "dart", "goss"]),
+            UniformFloatHyperparameter(name="learning_rate", lower=0.01, upper=2, default_value=0.1, log=True)
         ])
 
     def _initialize_algorithm(self, random_state=None, **config):
