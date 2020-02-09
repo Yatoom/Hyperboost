@@ -93,7 +93,11 @@ class HyperEPM(AbstractEPM):
 
         sample = self.configspace.sample_configuration(10000)
         sample = [i._vector for i in sample]
-        sample = self.pca_.transform(sample)
+
+        # One-hot-encode sample
+        sample_transformed = self.transform(sample)
+
+        sample = self.pca_.transform(sample_transformed)
 
         distances, indices = self.kdtree.query(sample, k=1)
         return {
