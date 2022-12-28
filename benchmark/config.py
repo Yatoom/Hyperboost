@@ -1,7 +1,7 @@
 import os
 
 from sklearn.model_selection import KFold, ShuffleSplit
-from benchmark.param_spaces import RandomForestSpace, GradientBoostingSpace, DecisionTreeSpace
+from benchmark.param_spaces import RandomForestSpace #, GradientBoostingSpace, DecisionTreeSpace
 
 """
 Seeds to make the HPO algorithm reproducible

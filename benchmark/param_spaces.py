@@ -1,7 +1,8 @@
 from ConfigSpace import ConfigurationSpace
 from ConfigSpace import UniformFloatHyperparameter, UniformIntegerHyperparameter
-from ConfigSpace.hyperparameters import CategoricalHyperparameter
-from lightgbm import LGBMClassifier
+from ConfigSpace.hyperparameters import CategoricalHyperparameter, UnParametrizedHyperparameter
+from sklearn.ensemble import RandomForestClassifier
+# from lightgbm import LGBMClassifier
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -59,40 +60,86 @@ class RandomForestSpace(ParamSpace):
     def __init__(self):
         super().__init__()
         self.name = "RandomForest"
-        self.model = LGBMClassifier
+        self.model = RandomForestClassifier
         self.is_deterministic = False
-        self.configuration_space = ConfigurationSpace()
-        self.configuration_space.add_hyperparameters([
-            UniformFloatHyperparameter("colsample_bytree", 0.20, 0.80, default_value=0.70),
-            UniformFloatHyperparameter("subsample", 0.20, 0.80, default_value=0.66),
-            UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
-            UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
-            UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
-        ])
+        cs = ConfigurationSpace()
+        criterion = CategoricalHyperparameter(
+            "criterion", ["gini", "entropy"], default_value="gini"
+        )
+
+        # The maximum number of features used in the forest is calculated as
+        # m^max_features, where m is the total number of features, and max_features
+        # is the hyperparameter specified below. The default is 0.5, which yields
+        # sqrt(m) features as max_features in the estimator.
+        # This corresponds with Geurts' heuristic.
+        max_features = UniformFloatHyperparameter(
+            "max_features", 0.0, 1.0, default_value=0.5
+        )
+
+        max_depth = UnParametrizedHyperparameter("max_depth", "None")
+        min_samples_split = UniformIntegerHyperparameter(
+            "min_samples_split", 2, 20, default_value=2
+        )
+        min_samples_leaf = UniformIntegerHyperparameter(
+            "min_samples_leaf", 1, 20, default_value=1
+        )
+        min_weight_fraction_leaf = UnParametrizedHyperparameter(
+            "min_weight_fraction_leaf", 0.0
+        )
+        max_leaf_nodes = UnParametrizedHyperparameter("max_leaf_nodes", "None")
+        min_impurity_decrease = UnParametrizedHyperparameter(
+            "min_impurity_decrease", 0.0
+        )
+        bootstrap = CategoricalHyperparameter(
+            "bootstrap", ["True", "False"], default_value="True"
+        )
+        cs.add_hyperparameters(
+            [
+                criterion,
+                max_features,
+                max_depth,
+                min_samples_split,
+                min_samples_leaf,
+                min_weight_fraction_leaf,
+                max_leaf_nodes,
+                bootstrap,
+                min_impurity_decrease,
+            ]
+        )
+
+        self.configuration_space = cs
+        # self.configuration_space = ConfigurationSpace()
+        # self.configuration_space.add_hyperparameters([
+        #     UniformFloatHyperparameter("colsample_bytree", 0.20, 0.80, default_value=0.70),
+        #     UniformFloatHyperparameter("subsample", 0.20, 0.80, default_value=0.66),
+        #     UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
+        #     UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
+        #     UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
+        # ])
 
     def _initialize_algorithm(self, random_state=None, **config):
-        return self.model(n_estimators=100, subsample_freq=1, boosting_type="rf", verbose=-1, n_jobs=-1,
+        return self.model(n_estimators=1, verbose=0, n_jobs=-1,
                           random_state=random_state, **config)
 
 
-class GradientBoostingSpace(ParamSpace):
-    def __init__(self):
-        super().__init__()
-        self.name = "GBM"
-        self.model = LGBMClassifier
-        self.is_deterministic = True
-        self.configuration_space = ConfigurationSpace()
-        self.configuration_space.add_hyperparameters([
-            UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
-            UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
-            UniformIntegerHyperparameter("max_depth", 3, 12, default_value=12),
-            UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
-            UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
-            CategoricalHyperparameter('boosting_type', choices=["gbdt", "dart", "goss"])
-        ])
-
-    def _initialize_algorithm(self, random_state=None, **config):
-        return self.model(n_estimators=100, verbose=-1, n_jobs=-1, random_state=random_state, **config)
+# class GradientBoostingSpace(ParamSpace):
+#     def __init__(self):
+#         super().__init__()
+#         self.name = "GBM"
+#         self.model = LGBMClassifier
+#         self.is_deterministic = True
+#         self.configuration_space = ConfigurationSpace()
+#         self.configuration_space.add_hyperparameters([
+#             UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
+#             UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
+#             UniformIntegerHyperparameter("max_depth", 3, 12, default_value=12),
+#             UniformFloatHyperparameter("reg_alpha", 0, 1, default_value=0),
+#             UniformFloatHyperparameter("reg_lambda", 0, 1, default_value=0),
+#             CategoricalHyperparameter('boosting_type', choices=["gbdt", "dart", "goss"])
+#         ])
+#
+#     def _initialize_algorithm(self, random_state=None, **config):
+#         return self.model(n_estimators=100, verbose=-1, n_jobs=-1, random_state=random_state, **config)
 
 
 class DecisionTreeSpace(ParamSpace):

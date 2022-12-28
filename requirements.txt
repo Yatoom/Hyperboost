@@ -1,8 +1,9 @@
+catboost
 numpy>=1.7.1
 scipy>=0.18.1
-lightgbm
+# lightgbm
 pandas
-smac
+smac==1.4.0
 openml
 matplotlib
 setuptools
@@ -10,7 +11,7 @@ cython
 six
 psutil
 pynisher>=0.4.1
-ConfigSpace>=0.4.6,<0.5
+ConfigSpace>=0.5
 scikit-learn>=0.18.0
 pyrfr>=0.5.0
 sphinx
@@ -21,5 +22,4 @@ pyDOE
 sobol_seq
 statsmodels
 emcee>=2.1.0
-george
-KDEpy
+# george

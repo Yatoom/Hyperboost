@@ -53,7 +53,7 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
     })
 
 
-def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv, fit_params=None, scoring=None):
+def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv, fit_params=None, scoring=None, progress=None, eval_tracker=None):
     """
     Create a runner that tries out a given configuration on the training set.
 
@@ -85,20 +85,21 @@ def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv
     # Create the target algorithm tester
     def tat(cfg, seed=None):
         # Print a dot for every time the TAT runner is executed
-        print(".", end="", flush=True)
+        # print(".", end="", flush=True)
 
         # Initialize algorithm
         algorithm = param_space.initialize_algorithm(random_state=seed, **cfg)
 
         # Print a comma to indicate model initialization completed
-        print(",", end="", flush=True)
+        # print(",", end="", flush=True)
 
         # Perform cross validation
         score = cross_val_score(algorithm, X_train, y_train, n_jobs=-1, cv=cv, fit_params=fit_params, scoring=scoring)
 
         # Print a semicolon to indicate cross validation finished
-        print(";", end="", flush=True)
+        # print(";", end="", flush=True)
 
+        progress.update(eval_tracker, advance=1)
         return 1 - np.mean(score)
 
     return tat
@@ -231,14 +232,14 @@ def store_json(data, name, prefix=config.RESULTS_PREFIX, trial=None):
         json.dump(all_data, file, indent=4)
 
 
-def run_smac_based_optimizer(hpo, tae, speed=1):
+def run_smac_based_optimizer(hpo, tae, progress=None, stage_tracker=None, speed=1):
     hpo = copy(hpo)
-    hpo.solver.intensifier.tae_runner.use_pynisher = False
     hpo.scenario.ta_run_limit = hpo.scenario.ta_run_limit * speed
 
     t0 = time.time()
     incumbent = hpo.optimize()
     t1 = time.time()
+    progress.update(stage_tracker, advance=1/speed)
     train_trajectory, test_trajectory = get_smac_trajectories(hpo, tae, speed=speed)
 
     hpo_result = {
@@ -256,6 +257,7 @@ def run_smac_based_optimizer(hpo, tae, speed=1):
         "last_test_loss": test_trajectory[-1]
     }
 
+    progress.reset(stage_tracker)
     return hpo_result, info
 
 
