@@ -25,7 +25,7 @@ TASKS = [125920, 49, 146819, 29, 15, 3913, 3, 10101, 9971, 146818, 3917, 37, 391
 
 """
 """
-BASE_DIRECTORY = "../output/"
+BASE_DIRECTORY = "./output/"
 
 """
 Output folder for SMAC (and by extension, Hyperboost)

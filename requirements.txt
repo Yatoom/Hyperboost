@@ -22,4 +22,5 @@ pyDOE
 sobol_seq
 statsmodels
 emcee>=2.1.0
+streamlit
 # george
