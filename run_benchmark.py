@@ -59,7 +59,7 @@ with progress as progress:
                 numeric = dataset.get_features_by_type("numeric", exclude=[task.target_name])
 
                 # Create a scenario object for SMAC
-                scenario = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic,
+                scenario_1x, scenario_2x = util.create_scenario(ml_algorithm.configuration_space, ml_algorithm.is_deterministic,
                                                 subpath=[str(hpo_state), ml_algorithm.name, str_task_id])
 
                 # Log to output
@@ -92,7 +92,7 @@ with progress as progress:
                     ########################################################################################################
                     name = "hyperboost"
                     progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
-                    hpo = SMAC4HPO(scenario=scenario, rng=rng, tae_runner=tat, model=CatboostEPM)
+                    hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat, model=CatboostEPM)
                     hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
 
                     write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
@@ -107,7 +107,7 @@ with progress as progress:
                     ########################################################################################################
                     name = "smac"
                     progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
-                    hpo = SMAC4HPO(scenario=scenario, rng=rng, tae_runner=tat)
+                    hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat)
                     hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
 
                     write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
@@ -122,8 +122,8 @@ with progress as progress:
                     ########################################################################################################
                     name = "roar_x2"
                     progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
-                    hpo = ROAR(scenario=scenario, rng=rng, tae_runner=tat)
-                    hpo_result, info = run_smac_based_optimizer(hpo, tae, speed=2, progress=progress, stage_tracker=task6)
+                    hpo = ROAR(scenario=scenario_2x, rng=rng, tae_runner=tat)
+                    hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
 
                     write_output(f"[{name}] time={info['time']} train_loss={info['last_train_loss']} "
                                  f"test_loss={info['last_test_loss']}\n")
@@ -156,7 +156,6 @@ with progress as progress:
                             last_test_loss = test_loss
                         test_trajectory.append(last_test_loss)
                         train_trajectory.append(best_loss)
-                        progress.update(task7, advance=0.5)
 
                     hpo_result = {
                         "loss_train": train_trajectory,

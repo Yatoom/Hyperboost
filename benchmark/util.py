@@ -41,16 +41,33 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
     if subpath is None:
         subpath = []
 
-    return Scenario({
-        "run_obj": run_obj,
-        "cs": cs,
-        "deterministic": "true" if deterministic else "false",
-        "runcount_limit": cfgfile.NUM_ITER,
-        "intens_min_chall": intens_min_chall,
-        "maxR": cfgfile.MAXR,
-        "output_dir": os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
+
+
+    normal_scenario = Scenario({
+        "run_obj"          : run_obj,
+        "runcount-limit"   : cfgfile.NUM_ITER,
+        "ta_run_limit"     : cfgfile.NUM_ITER,
+        "deterministic"    : deterministic,
+        "cs"               : cs,
+        "maxR"             : cfgfile.MAXR,
+        "output_dir"       : os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
+        "intens_min_chall" : intens_min_chall,
         **kwargs
     })
+
+    sped_up_scenario = Scenario({
+        "run_obj"          : run_obj,
+        "runcount-limit"   : cfgfile.NUM_ITER * 2,
+        "ta_run_limit"     : cfgfile.NUM_ITER * 2,
+        "deterministic"    : deterministic,
+        "cs"               : cs,
+        "maxR"             : cfgfile.MAXR,
+        "output_dir"       : os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
+        "intens_min_chall" : intens_min_chall,
+        **kwargs
+    })
+
+    return normal_scenario, sped_up_scenario
 
 
 def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv, fit_params=None, scoring=None, progress=None, eval_tracker=None):
@@ -234,7 +251,6 @@ def store_json(data, name, prefix=config.RESULTS_PREFIX, trial=None):
 
 def run_smac_based_optimizer(hpo, tae, progress=None, stage_tracker=None, speed=1):
     hpo = copy(hpo)
-    hpo.scenario.ta_run_limit = hpo.scenario.ta_run_limit * speed
 
     t0 = time.time()
     incumbent = hpo.optimize()
