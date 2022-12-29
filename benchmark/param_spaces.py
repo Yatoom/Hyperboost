@@ -1,6 +1,7 @@
-from ConfigSpace import ConfigurationSpace
+from ConfigSpace import ConfigurationSpace, Float, Categorical, Integer, EqualsCondition
 from ConfigSpace import UniformFloatHyperparameter, UniformIntegerHyperparameter
 from ConfigSpace.hyperparameters import CategoricalHyperparameter, UnParametrizedHyperparameter
+from catboost import CatBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 # from lightgbm import LGBMClassifier
 from sklearn.svm import LinearSVC
@@ -108,18 +109,47 @@ class RandomForestSpace(ParamSpace):
         )
 
         self.configuration_space = cs
-        # self.configuration_space = ConfigurationSpace()
-        # self.configuration_space.add_hyperparameters([
-        #     UniformFloatHyperparameter("colsample_bytree", 0.20, 0.80, default_value=0.70),
-        #     UniformFloatHyperparameter("subsample", 0.20, 0.80, default_value=0.66),
-        #     UniformIntegerHyperparameter("num_leaves", 4, 64, default_value=32),
-        #     UniformIntegerHyperparameter("min_child_samples", 1, 100, default_value=20),
-        #     UniformIntegerHyperparameter("max_depth", 4, 12, default_value=12),
-        # ])
 
     def _initialize_algorithm(self, random_state=None, **config):
         return self.model(n_estimators=1, verbose=0, n_jobs=-1,
                           random_state=random_state, **config)
+
+
+class CatBoostSpace(ParamSpace):
+    def __init__(self):
+        super().__init__()
+        self.name = "CatBoost"
+        self.model = CatBoostClassifier
+        self.is_deterministic = True
+        self.configuration_space = ConfigurationSpace()
+
+        objective = Categorical("objective", ["Logloss", "CrossEntropy"])
+        colsample_bylevel = Float('colsample_bylevel', bounds=(0.01, 0.1), log=True)
+        depth = Integer('depth', bounds=(1, 12))
+        boosting_type = Categorical('boosting_type', ["Ordered", "Plain"])
+        bootstrap_type = Categorical('bootstrap_type', ["Bayeisan", "Bernoulli", "MVS"])
+        bagging_temperature = Float('bagging_temperature', bounds=(0, 10))
+        subsample = Float("subsample", bounds=(0.1, 1), log=True)
+
+        c1 = EqualsCondition(bagging_temperature, bootstrap_type, "Bayesian")
+        c2 = EqualsCondition(subsample, boosting_type, "Bernoulli")
+
+        self.configuration_space.add_hyperparameters([
+            objective, colsample_bylevel, depth,
+            boosting_type, bootstrap_type, bagging_temperature, subsample
+        ])
+
+        self.configuration_space.add_conditions([c1, c2])
+
+    def _initialize_algorithm(self, random_state=None, **config):
+        return self.model(
+            iterations=100,
+            random_seed=0,
+            verbose=False,
+            used_ram_limit="3gb",
+            eval_metric="Accuracy",
+            task_type="CPU"
+        )
 
 
 # class GradientBoostingSpace(ParamSpace):
