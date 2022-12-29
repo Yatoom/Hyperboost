@@ -1,7 +1,7 @@
 import os
 
-from sklearn.model_selection import KFold, ShuffleSplit
-from benchmark.param_spaces import RandomForestSpace #, GradientBoostingSpace, DecisionTreeSpace
+from sklearn.model_selection import KFold, ShuffleSplit, train_test_split, StratifiedShuffleSplit
+from benchmark.param_spaces import RandomForestSpace, CatBoostSpace  # , GradientBoostingSpace, DecisionTreeSpace
 
 """
 Seeds to make the HPO algorithm reproducible
@@ -63,6 +63,7 @@ METRIC = 'balanced_accuracy'
 Parameter spaces to optimize.
 """
 ML_ALGORITHMS = [
+    # CatBoostSpace()
     RandomForestSpace(),
     # GradientBoostingSpace(),
     # DecisionTreeSpace()
@@ -73,7 +74,10 @@ Splits for the outer loop.
 The HPO algorithm will be executed using `1 - 1 / n_splits` part of the data. The resulting algorithm is also refitted 
 on that part of the data, and then tested on the remaining data.
 """
-OUTER_LOOP = KFold(n_splits=3, shuffle=True, random_state=42)
+# OUTER_LOOP = KFold(n_splits=3, shuffle=True, random_state=42)
+N_SPLITS = 1
+OUTER_LOOP = StratifiedShuffleSplit(n_splits=N_SPLITS, test_size=0.25, random_state=42)
+# OUTER_LOOP = train_test_split(test_size=0.25, stratify=True, random_state=42)
 
 """
 Splits for the inner loop.

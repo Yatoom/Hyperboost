@@ -118,8 +118,7 @@ class RandomForestSpace(ParamSpace):
 class CatBoostSpace(ParamSpace):
     def __init__(self):
         super().__init__()
-        self.name = "CatBoost"
-        self.model = CatBoostClassifier
+        self.name = "CatBoost2"
         self.is_deterministic = True
         self.configuration_space = ConfigurationSpace()
 
@@ -127,12 +126,12 @@ class CatBoostSpace(ParamSpace):
         colsample_bylevel = Float('colsample_bylevel', bounds=(0.01, 0.1), log=True)
         depth = Integer('depth', bounds=(1, 12))
         boosting_type = Categorical('boosting_type', ["Ordered", "Plain"])
-        bootstrap_type = Categorical('bootstrap_type', ["Bayeisan", "Bernoulli", "MVS"])
+        bootstrap_type = Categorical('bootstrap_type', ["Bayesian", "Bernoulli", "MVS"])
         bagging_temperature = Float('bagging_temperature', bounds=(0, 10))
         subsample = Float("subsample", bounds=(0.1, 1), log=True)
 
         c1 = EqualsCondition(bagging_temperature, bootstrap_type, "Bayesian")
-        c2 = EqualsCondition(subsample, boosting_type, "Bernoulli")
+        c2 = EqualsCondition(subsample, bootstrap_type, "Bernoulli")
 
         self.configuration_space.add_hyperparameters([
             objective, colsample_bylevel, depth,
@@ -142,13 +141,14 @@ class CatBoostSpace(ParamSpace):
         self.configuration_space.add_conditions([c1, c2])
 
     def _initialize_algorithm(self, random_state=None, **config):
-        return self.model(
+        return CatBoostClassifier(
             iterations=100,
             random_seed=0,
             verbose=False,
             used_ram_limit="3gb",
             eval_metric="Accuracy",
-            task_type="CPU"
+            task_type="CPU",
+            **config
         )
 
 

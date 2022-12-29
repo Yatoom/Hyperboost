@@ -51,8 +51,7 @@ class CatboostEPM(BaseEPM):
             pca_components=pca_components,
         )
         self.rng = np.random.RandomState(self.seed)
-        self.catboost = CatBoostRegressor(iterations=100, learning_rate=0.2,
-                                          loss_function='RMSEWithUncertainty', posterior_sampling=True,
+        self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
                                           verbose=False, random_seed=0)
 
     def _train(self, X: np.ndarray, Y: np.ndarray) -> "CatboostEPM":
