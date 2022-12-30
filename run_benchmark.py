@@ -105,14 +105,14 @@ with progress as progress:
                     ########################################################################################################
                     # SMAC
                     ########################################################################################################
-                    # name = "smac"
-                    # hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat)
-                    # hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
-                    # util.log_results(name, progress, info, hpo_result)
-                    #
-                    # records = util.add_record(records, task_id, name, hpo_result)
-                    # progress.update(task5, advance=1)
-                    # progress.reset(task7)
+                    name = "smac"
+                    hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat)
+                    hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
+                    util.log_results(name, progress, info, hpo_result)
+
+                    records = util.add_record(records, task_id, name, hpo_result)
+                    progress.update(task5, advance=1)
+                    progress.reset(task7)
 
                     ########################################################################################################
                     # ROAR x2
