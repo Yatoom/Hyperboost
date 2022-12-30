@@ -99,10 +99,11 @@ class CatboostEPM(BaseEPM):
         if not isinstance(X, np.ndarray):
             raise NotImplementedError("X has to be of type np.ndarray")
 
+        pred = self.catboost.predict(X)
         preds = self.catboost.virtual_ensembles_predict(X, prediction_type='TotalUncertainty',
                                                         virtual_ensembles_count=10)
         mean_preds = preds[:, 0]  # mean values predicted by a virtual ensemble
         knowledge = preds[:, 1]  # knowledge uncertainty predicted by a virtual ensemble
         data = preds[:, 2]  # average estimated data uncertainty
 
-        return mean_preds, knowledge
+        return pred[:, 0], knowledge

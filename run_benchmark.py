@@ -87,17 +87,16 @@ with progress as progress:
                     tae = util.create_target_algorithm_evaluator(ml_algorithm, config.SEEDS, X_train, y_train, X_test,
                                                                  y_test, scoring=config.METRIC)
 
+                    progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator}")
+
+
                     ########################################################################################################
                     # Hyperboost
                     ########################################################################################################
                     name = "hyperboost"
-                    progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
                     hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat, model=CatboostEPM)
                     hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
-                    progress.console.print(
-                        f"> Time = {info['time']} | Run Time = {hpo_result['run_time']} | Clock = {hpo_result['total_time']} |"
-                        f"Train loss = {info['last_train_loss']} | Test loss = {info['last_test_loss']}"
-                    )
+                    util.log_results(name, progress, info, hpo_result)
 
                     records = util.add_record(records, task_id, name, hpo_result)
                     progress.update(task5, advance=1)
@@ -106,30 +105,22 @@ with progress as progress:
                     ########################################################################################################
                     # SMAC
                     ########################################################################################################
-                    name = "smac"
-                    progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
-                    hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat)
-                    hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
-                    progress.console.print(
-                        f"> Time = {info['time']} | Run Time = {hpo_result['run_time']} | Clock = {hpo_result['total_time']} |"
-                        f"Train loss = {info['last_train_loss']} | Test loss = {info['last_test_loss']}"
-                    )
-
-                    records = util.add_record(records, task_id, name, hpo_result)
-                    progress.update(task5, advance=1)
-                    progress.reset(task7)
+                    # name = "smac"
+                    # hpo = SMAC4HPO(scenario=scenario_1x, rng=rng, tae_runner=tat)
+                    # hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
+                    # util.log_results(name, progress, info, hpo_result)
+                    #
+                    # records = util.add_record(records, task_id, name, hpo_result)
+                    # progress.update(task5, advance=1)
+                    # progress.reset(task7)
 
                     ########################################################################################################
                     # ROAR x2
                     ########################################################################################################
                     name = "roar_x2"
-                    progress.console.print(f"Iteration seed = {hpo_state} | Target algo = {ml_algorithm.name} | Task id = {task_id} | Outer loop = {task4.denominator} | Optimizer = {name}")
                     hpo = ROAR(scenario=scenario_2x, rng=rng, tae_runner=tat)
                     hpo_result, info = run_smac_based_optimizer(hpo, tae, progress=progress, stage_tracker=task6)
-                    progress.console.print(
-                        f"> Time = {info['time']} | Run Time = {hpo_result['run_time']} | Clock = {hpo_result['total_time']} |"
-                        f"Train loss = {info['last_train_loss']} | Test loss = {info['last_test_loss']}"
-                    )
+                    util.log_results(name, progress, info, hpo_result)
 
                     records = util.add_record(records, task_id, name, hpo_result)
                     progress.update(task5, advance=1)

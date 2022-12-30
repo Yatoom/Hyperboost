@@ -41,36 +41,35 @@ def create_scenario(cs: ConfigurationSpace, deterministic: bool, run_obj: str = 
     if subpath is None:
         subpath = []
 
-
-
     normal_scenario = Scenario({
-        "run_obj"          : run_obj,
-        "runcount-limit"   : cfgfile.NUM_ITER,
-        "ta_run_limit"     : cfgfile.NUM_ITER,
-        "deterministic"    : deterministic,
-        "cs"               : cs,
-        "maxR"             : cfgfile.MAXR,
-        "output_dir"       : os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
-        "intens_min_chall" : intens_min_chall,
+        "run_obj": run_obj,
+        "runcount-limit": cfgfile.NUM_ITER,
+        "ta_run_limit": cfgfile.NUM_ITER,
+        "deterministic": deterministic,
+        "cs": cs,
+        "maxR": cfgfile.MAXR,
+        "output_dir": os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
+        "intens_min_chall": intens_min_chall,
         **kwargs
     })
 
     sped_up_scenario = Scenario({
-        "run_obj"          : run_obj,
-        "runcount-limit"   : cfgfile.NUM_ITER * 2,
-        "ta_run_limit"     : cfgfile.NUM_ITER * 2,
-        "deterministic"    : deterministic,
-        "cs"               : cs,
-        "maxR"             : cfgfile.MAXR,
-        "output_dir"       : os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
-        "intens_min_chall" : intens_min_chall,
+        "run_obj": run_obj,
+        "runcount-limit": cfgfile.NUM_ITER * 2,
+        "ta_run_limit": cfgfile.NUM_ITER * 2,
+        "deterministic": deterministic,
+        "cs": cs,
+        "maxR": cfgfile.MAXR,
+        "output_dir": os.path.join(cfgfile.SMAC_OUTPUT_FOLDER, *subpath),
+        "intens_min_chall": intens_min_chall,
         **kwargs
     })
 
     return normal_scenario, sped_up_scenario
 
 
-def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv, fit_params=None, scoring=None, progress=None, eval_tracker=None):
+def create_target_algorithm_tester(param_space: ParamSpace, X_train, y_train, cv, fit_params=None, scoring=None,
+                                   progress=None, eval_tracker=None):
     """
     Create a runner that tries out a given configuration on the training set.
 
@@ -208,7 +207,7 @@ def get_smac_trajectories(smac, target_algorithm_evaluator, speed=1):
         loss, std = target_algorithm_evaluator(config)
         test_trajectory[num_runs:] = loss
 
-    return train_trajectory.tolist(), test_trajectory.tolist()
+    return train_trajectory.tolist(), test_trajectory.tolist(), np.mean(list(smac.runhistory._cost_per_config.values()))
 
 
 def store_json(data, name, prefix=config.RESULTS_PREFIX, trial=None):
@@ -229,7 +228,7 @@ def store_json(data, name, prefix=config.RESULTS_PREFIX, trial=None):
 
     # Make sure results directory exists
     if not os.path.exists(config.RESULTS_DIRECTORY):
-        os.mkdir(config. RESULTS_DIRECTORY)
+        os.mkdir(config.RESULTS_DIRECTORY)
 
     filename = f"{prefix}-{name}-{trial}.json"
     filename = os.path.join(config.RESULTS_DIRECTORY, filename)
@@ -255,8 +254,8 @@ def run_smac_based_optimizer(hpo, tae, progress=None, stage_tracker=None, speed=
     t0 = time.time()
     incumbent = hpo.optimize()
     t1 = time.time()
-    progress.update(stage_tracker, advance=1/speed)
-    train_trajectory, test_trajectory = get_smac_trajectories(hpo, tae, speed=speed)
+    progress.update(stage_tracker, advance=1 / speed)
+    train_trajectory, test_trajectory, mean_cost = get_smac_trajectories(hpo, tae, speed=speed)
 
     hpo_result = {
         "loss_train": np.array(train_trajectory).reshape(-1, speed).min(axis=1).tolist(),
@@ -269,6 +268,8 @@ def run_smac_based_optimizer(hpo, tae, progress=None, stage_tracker=None, speed=
     info = {
         "time": t1 - t0,
         "incumbent": incumbent,
+        "mean_cost": mean_cost,
+        "avg_train_loss": np.mean(train_trajectory[1:]),
         "last_train_loss": train_trajectory[-1],
         "last_test_loss": test_trajectory[-1]
     }
@@ -294,3 +295,13 @@ def add_record(records, task_id, name, hpo_result):
     records[str_task_id][name].append(hpo_result)
 
     return records
+
+
+def log_results(name, progress, info, hpo_result):
+    total_time = hpo_result['total_time']
+    run_time = hpo_result['run_time']
+    think_time = total_time - run_time
+    progress.console.print(
+        f"- {name} | Train loss: {info['last_train_loss'] :.4f} (best) {info['avg_train_loss'] :.4f} (avg) {info['mean_cost'] :.4f} (cost) | Test loss {info['last_test_loss'] :.4f} | "
+        f"Time: {total_time :.4f} (total), {run_time} (target algo), {think_time} (thinking)"
+    )
