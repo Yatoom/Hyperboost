@@ -1,5 +1,6 @@
 import copy
 import os
+import pathlib
 from _warnings import warn
 import plotly.graph_objects as go
 
@@ -96,10 +97,12 @@ class Collection:
         for filename in os.listdir(directory):
 
             # Gather information from filename
+            dirname = pathlib.PurePath(directory).name
             names = filename.replace('.json', '').split('-')
+
             target_name = names[-2]
             seed = names[-1]
-            prefix = '-'.join(names[0:-2])
+            prefix = dirname + "/" + '-'.join(names[0:-2])
 
             # Create or get group
             group = self.get_group(

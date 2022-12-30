@@ -101,7 +101,7 @@ class CatboostEPM(BaseEPM):
 
         pred = self.catboost.predict(X)
         preds = self.catboost.virtual_ensembles_predict(X, prediction_type='TotalUncertainty',
-                                                        virtual_ensembles_count=10)
+                                                        virtual_ensembles_count=20)
         mean_preds = preds[:, 0]  # mean values predicted by a virtual ensemble
         knowledge = preds[:, 1]  # knowledge uncertainty predicted by a virtual ensemble
         data = preds[:, 2]  # average estimated data uncertainty
