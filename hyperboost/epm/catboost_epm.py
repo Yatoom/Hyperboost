@@ -52,7 +52,7 @@ class CatboostEPM(BaseEPM):
         )
         self.rng = np.random.RandomState(self.seed)
         self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
-                                          verbose=False, random_seed=0)
+                                          verbose=False, random_seed=0, learning_rate=0.3)
 
     def _train(self, X: np.ndarray, Y: np.ndarray) -> "CatboostEPM":
         """Pseudo training on X and Y.
@@ -106,4 +106,4 @@ class CatboostEPM(BaseEPM):
         knowledge = preds[:, 1]  # knowledge uncertainty predicted by a virtual ensemble
         data = preds[:, 2]  # average estimated data uncertainty
 
-        return pred[:, 0], knowledge
+        return pred[:, 0], knowledge ** 0.3

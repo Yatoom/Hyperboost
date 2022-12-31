@@ -7,3 +7,6 @@ __pycache__/
 smac3-output_*/
 smac3_output_*/
 output/
+catboost_info
+.DS_Store
+.ipynb_checkpoints
