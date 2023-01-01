@@ -51,8 +51,27 @@ class CatboostEPM(BaseEPM):
             pca_components=pca_components,
         )
         self.rng = np.random.RandomState(self.seed)
+
+        # Seems to work slightly better after 100 iterations.
         self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
-                                          verbose=False, random_seed=0, learning_rate=0.3)
+                                          verbose=False, random_seed=0, learning_rate=0.3, subsample=0.66,
+                                          bootstrap_type="Bernoulli")
+
+        # self.catboost = CatBoostRegressor(loss_function='RMSEWithUncertainty', posterior_sampling=True,
+        #                                   verbose=False, random_seed=0, learning_rate=0.2, subsample=1,
+        #                                   bootstrap_type="Bernoulli")
+        # This doesn't work at all with subsample 0.66! Subsample 1 doesn't work either.
+
+        # For earlier tasks, this setting seems a bit slower in the beginning, but catches up in the end
+        # (around iteration 80 it starts to catch up, and around 220 it's about the same as v2).
+        # For later task it doesn't work anymore.
+        # self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
+        #                                   verbose=False, random_seed=0, learning_rate=0.3, bagging_temperature=1,
+        #                                   bootstrap_type="Bayesian")
+
+        # Alternative: bootstrap_type="Bernoulli", sampling_frequency="PerTree"
+
+        # Next: 1000 iterations, learning rate 0.3
 
     def _train(self, X: np.ndarray, Y: np.ndarray) -> "CatboostEPM":
         """Pseudo training on X and Y.
@@ -107,3 +126,7 @@ class CatboostEPM(BaseEPM):
         data = preds[:, 2]  # average estimated data uncertainty
 
         return pred[:, 0], knowledge ** 0.3
+        # Knowledge uncertainty at 0.3 seems fine.
+        # Knowledge uncertainty is reduced too much at 0.4 --> Too exploitative (goes down fast, but then slows down)
+        # Knowledge uncertainty at 0.2 seems to be slightly too explorative (takes too long to go down)
+
