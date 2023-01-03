@@ -175,6 +175,15 @@ class Collection:
 
         return self
 
+    def result_table(self):
+
+        get_bests = lambda files: pd.concat([f.get_bests() for f in files], axis=1).T.groupby(level=0).agg(list).T
+        collected = pd.concat([get_bests(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups], axis=1)
+        aggregated = collected.applymap(np.mean)
+        return aggregated
+
+
+
     def visualize(self, data='train', show_std=False, ranked=False, global_std=False):
         f = go.FigureWidget()
         color_counter = 0

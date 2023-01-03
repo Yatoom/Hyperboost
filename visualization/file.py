@@ -2,6 +2,7 @@ import copy
 import json
 import os
 from typing import Union
+import pandas as pd
 
 import numpy as np
 
@@ -115,3 +116,17 @@ class File:
         self.fold_avg_ = result
 
         return self.fold_avg_
+
+    def get_bests(self):
+        """
+        Get the last result of every trajectory
+        """
+        result = {
+            task: {
+                optimizer: list([iteration['loss_train'][-1] for iteration in results])
+                for optimizer, results in values.items()
+            }
+            for task, values in self.data.items()
+        }
+        frame = pd.DataFrame(result).T  # Dataframe with one column
+        return frame

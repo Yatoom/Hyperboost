@@ -25,12 +25,15 @@ tasks = sorted(list(tasks))
 
 st.sidebar.subheader('Visualization')
 show_std = st.sidebar.checkbox('Show standard deviation')
-show_input = st.sidebar.checkbox('Show overview of experiments')
+show_input = st.sidebar.checkbox('Show overview of experiments', value=True)
 task = st.sidebar.selectbox('Select task(s) to display', ['all'] + tasks)
 
 # Apply filters
 tasks = tasks if task == 'all' else [task]
 c = c.filter(tasks, target_name)
+
+# for g in c.groups:
+#     st.sidebar.checkbox(f"{g.prefix}")
 
 # Input
 if show_input:
@@ -42,6 +45,8 @@ if show_input:
         the form: `<Directory>/<Experiment>-<Target>-<Iter. seed>.json`.
      """)
     st.table(c.overview)
+
+st.table(c.result_table())
 
 
 st.subheader("Average loss")
