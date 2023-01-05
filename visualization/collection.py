@@ -175,12 +175,17 @@ class Collection:
 
         return self
 
-    def result_table(self):
+    def result_table(self, compare_with_col, seed_agg=np.mean, outer_loop_agg=np.mean):
 
-        get_bests = lambda files: pd.concat([f.get_bests() for f in files], axis=1).T.groupby(level=0).agg(list).T
+        # Create a table of the latest scores
+        get_bests = lambda files: pd.concat([f.get_bests(outer_loop_agg) for f in files], axis=1).T.groupby(level=0).agg(seed_agg).T
+
+        # Create tables for all groups and concatenate them with good columnn names
         collected = pd.concat([get_bests(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups], axis=1)
-        aggregated = collected.applymap(np.mean)
-        return aggregated
+
+        result = (collected.divide(collected[compare_with_col], axis=0) <= 1)
+        result = pd.DataFrame(result.mean(axis=0), columns=[compare_with_col])
+        return result
 
 
 

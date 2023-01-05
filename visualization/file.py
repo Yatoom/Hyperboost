@@ -117,7 +117,7 @@ class File:
 
         return self.fold_avg_
 
-    def get_bests(self):
+    def get_bests(self, agg_func):
         """
         Get the last result of every trajectory
         """
@@ -129,4 +129,4 @@ class File:
             for task, values in self.data.items()
         }
         frame = pd.DataFrame(result).T  # Dataframe with one column
-        return frame
+        return frame.applymap(agg_func)  # Mean of outer loop

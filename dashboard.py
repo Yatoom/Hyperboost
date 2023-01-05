@@ -46,7 +46,9 @@ if show_input:
      """)
     st.table(c.overview)
 
-st.table(c.result_table())
+baseline = "baseline/benchmark-roar_x2"
+st.subheader("% wins against baseline")
+st.table(c.result_table(baseline))
 
 
 st.subheader("Average loss")
