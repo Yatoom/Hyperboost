@@ -117,6 +117,18 @@ class File:
 
         return self.fold_avg_
 
+    def agg_trajectories(self):
+        result = {
+            task: {
+                optimizer: np.mean([iteration['loss_train'] for iteration in results], axis=0)
+                for optimizer, results in values.items()
+            }
+            for task, values in self.data.items()
+        }
+        frame = pd.DataFrame(result).T  # Dataframe with one column
+        return frame
+
+
     def get_bests(self, agg_func):
         """
         Get the last result of every trajectory

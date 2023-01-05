@@ -175,7 +175,16 @@ class Collection:
 
         return self
 
-    def result_table(self, compare_with_col, seed_agg=np.mean, outer_loop_agg=np.mean):
+    def get_wins(self, baseline):
+        get_trajectories = lambda files: pd.concat([f.agg_trajectories() for f in files], axis=1)
+        collected = [get_trajectories(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups]
+        concatenated = pd.concat(collected, axis=1).T.groupby(level=0).agg(list).T
+        aggregated = concatenated.applymap(lambda x: np.median(x, axis=0))
+        compared = aggregated.divide(aggregated[baseline], axis=0).applymap(lambda x: x <= 1)
+        result = compared.T.agg(list, axis=1).map(lambda x: np.mean(x, axis=0))
+        return pd.DataFrame(result.to_dict())[1:]
+
+    def result_table(self, compare_with_col, seed_agg=np.median, outer_loop_agg=np.mean):
 
         # Create a table of the latest scores
         get_bests = lambda files: pd.concat([f.get_bests(outer_loop_agg) for f in files], axis=1).T.groupby(level=0).agg(seed_agg).T
@@ -185,9 +194,20 @@ class Collection:
 
         result = (collected.divide(collected[compare_with_col], axis=0) <= 1)
         result = pd.DataFrame(result.mean(axis=0), columns=[compare_with_col])
+
         return result
 
 
+    def visualize_wins(self, baseline):
+        wins = self.get_wins(baseline)
+        f = go.FigureWidget()
+
+        color_counter = 0
+        for win in wins:
+            solid_color = self.get_color(color_counter, 1)
+            color_counter += 1
+            f.add_scattergl(y=list(wins[win]), name=win, line_color=solid_color)
+        return f
 
     def visualize(self, data='train', show_std=False, ranked=False, global_std=False):
         f = go.FigureWidget()

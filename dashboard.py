@@ -46,9 +46,11 @@ if show_input:
      """)
     st.table(c.overview)
 
-baseline = "baseline/benchmark-roar_x2"
+baseline = "baseline/benchmark-smac"
 st.subheader("% wins against baseline")
 st.table(c.result_table(baseline))
+st.subheader("% wins over time against baseline")
+st.plotly_chart(c.visualize_wins(baseline))
 
 
 st.subheader("Average loss")

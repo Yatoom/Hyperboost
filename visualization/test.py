@@ -6,7 +6,9 @@ import json
 c = Collection()
 c = c.add_files('../baseline/')
 # c = c.add_files('.x./output/results/')
-c.result_table()
+c.get_wins()
+c.visualize_wins()
+# c.result_table("baseline/benchmark-smac")
 
 # print(os.getcwd())
 # with open("../output/results/benchmark-RandomForest-2519249986.json", "r") as f:
@@ -18,4 +20,4 @@ c.result_table()
     #     }
     #     for seed, values in data.items()
     # }
-print(result)
+# print(result)
