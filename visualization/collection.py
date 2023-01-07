@@ -197,7 +197,11 @@ class Collection:
             result = pd.DataFrame(result.mean(axis=0), columns=[baseline])
             dfs.append(result)
 
-        result = pd.concat(dfs, axis=1).applymap(lambda x: 0.5 if x == 1 else x)
+        result = pd.concat(dfs, axis=1)
+
+        for baseline in baselines:
+            result[baseline].loc[baseline] = np.nan
+
         result['mean'] = result.mean(axis=1)
         return result.sort_values('mean', ascending=False)
 

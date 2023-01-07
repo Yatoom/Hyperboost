@@ -53,25 +53,21 @@ class CatboostEPM(BaseEPM):
         self.rng = np.random.RandomState(self.seed)
 
         # Seems to work slightly better after 100 iterations.
-        self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
-                                          verbose=False, random_seed=0, learning_rate=0.3, subsample=0.66,
-                                          bootstrap_type="Bernoulli")
 
-        # self.catboost = CatBoostRegressor(loss_function='RMSEWithUncertainty', posterior_sampling=True,
-        #                                   verbose=False, random_seed=0, learning_rate=0.2, subsample=1,
-        #                                   bootstrap_type="Bernoulli")
-        # This doesn't work at all with subsample 0.66! Subsample 1 doesn't work either.
-
-        # For earlier tasks, this setting seems a bit slower in the beginning, but catches up in the end
-        # (around iteration 80 it starts to catch up, and around 220 it's about the same as v2).
-        # For later task it doesn't work anymore.
+        # V2
         # self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
-        #                                   verbose=False, random_seed=0, learning_rate=0.3, bagging_temperature=1,
-        #                                   bootstrap_type="Bayesian")
+        #                                    verbose=False, random_seed=0, learning_rate=0.3)
 
-        # Alternative: bootstrap_type="Bernoulli", sampling_frequency="PerTree"
+        # V3
+        # self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=False,
+        #                                   verbose=False, random_seed=0, learning_rate=0.3)
 
-        # Next: 1000 iterations, learning rate 0.3
+        # V4
+        self.catboost = CatBoostRegressor(iterations=100, loss_function="RMSEWithUncertainty", posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=0.5,
+                                          )
+
+        return None
 
     def _train(self, X: np.ndarray, Y: np.ndarray) -> "CatboostEPM":
         """Pseudo training on X and Y.
@@ -91,6 +87,7 @@ class CatboostEPM(BaseEPM):
             raise NotImplementedError("Y has to be of type np.ndarray")
 
         self.catboost.fit(X, Y)
+        # print(self.catboost.get_all_params())
 
         self.logger.debug("Fit model to data")
         return self

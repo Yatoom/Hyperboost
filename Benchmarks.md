@@ -34,7 +34,8 @@ Same as `benchmark-RandomForest` but using data as knowledge uncertainty:
 return pred[:, 0], data
 ```
 
-### v2-RandomForest
+### Hyperboost v2
+Beats SMAC in 42% cases, ROAR in 58% cases,
 Same as `benchmark-RandomForest` but wit higher learning rate and a scaled knowledge uncertainty 
 (because the knowledge uncertainty of virtual ensembles is very low compared to real ensembles)
 ```python
@@ -44,4 +45,34 @@ self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncerta
 
 ```python
 return pred[:, 0], knowledge ** 0.3
+```
+
+### Hyperboost v3
+Beats SMAC in 45% cases, ROAR in 68% cases, V2 in 67% cases
+```python
+self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=0.3)
+```
+
+### Bern0.66Ran1Post0
+Beats SMAC in 51% cases, ROAR in 61% cases, V2 in 64% cases and V3 in 48% cases.
+```python
+self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=0.3, bootstrap_type="Bernoulli",
+                                          subsample=0.66)
+```
+
+### v3Depthwise
+Beats SMAC in 45% cases, ROAR in 71% cases, V2 in 58% cases and V3 in 45% cases
+```python
+self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=0.3, grow_policy="Depthwise")
+```
+
+### Hyperboost v4
+Beats SMAC in 64.% cases, ROAR in 74% cases, V2 in 68% cases and V3 in 55% cases
+```python
+self.catboost = CatBoostRegressor(iterations=100, loss_function="RMSEWithUncertainty", posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=0.5,
+                                          )
 ```
