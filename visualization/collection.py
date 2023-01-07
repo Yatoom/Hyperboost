@@ -176,7 +176,7 @@ class Collection:
         return self
 
     def get_wins(self, baseline):
-        get_trajectories = lambda files: pd.concat([f.agg_trajectories() for f in files], axis=1)
+        get_trajectories = lambda files: pd.concat([f.agg_trajectories(self.tasks) for f in files], axis=1)
         collected = [get_trajectories(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups]
         concatenated = pd.concat(collected, axis=1).T.groupby(level=0).agg(list).T
         aggregated = concatenated.applymap(lambda x: np.median(x, axis=0))
@@ -184,18 +184,22 @@ class Collection:
         result = compared.T.agg(list, axis=1).map(lambda x: np.mean(x, axis=0))
         return pd.DataFrame(result.to_dict())[1:]
 
-    def result_table(self, compare_with_col, seed_agg=np.median, outer_loop_agg=np.mean):
+    def result_table(self, baselines, seed_agg=np.mean, outer_loop_agg=np.mean):
 
         # Create a table of the latest scores
-        get_bests = lambda files: pd.concat([f.get_bests(outer_loop_agg) for f in files], axis=1).T.groupby(level=0).agg(seed_agg).T
+        get_bests = lambda files: pd.concat([f.get_bests(outer_loop_agg, self.tasks) for f in files], axis=1).T.groupby(level=0).agg(seed_agg).T
 
         # Create tables for all groups and concatenate them with good columnn names
-        collected = pd.concat([get_bests(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups], axis=1)
+        dfs = []
+        for baseline in baselines:
+            collected = pd.concat([get_bests(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups], axis=1)
+            result = (collected.divide(collected[baseline], axis=0) <= 1)
+            result = pd.DataFrame(result.mean(axis=0), columns=[baseline])
+            dfs.append(result)
 
-        result = (collected.divide(collected[compare_with_col], axis=0) <= 1)
-        result = pd.DataFrame(result.mean(axis=0), columns=[compare_with_col])
-
-        return result
+        result = pd.concat(dfs, axis=1).applymap(lambda x: 0.5 if x == 1 else x)
+        result['mean'] = result.mean(axis=1)
+        return result.sort_values('mean', ascending=False)
 
 
     def visualize_wins(self, baseline):

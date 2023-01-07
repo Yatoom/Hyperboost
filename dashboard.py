@@ -46,10 +46,11 @@ if show_input:
      """)
     st.table(c.overview)
 
-baseline = "baseline/benchmark-smac"
+baselines = ["baseline/benchmark-roar_x2", "baseline/benchmark-smac", "baseline/v2-hyperboost", "baseline/v3-hyperboost"]
+baseline = "baseline/benchmark-roar_x2"
 st.subheader("% wins against baseline")
-st.table(c.result_table(baseline))
-st.subheader("% wins over time against baseline")
+st.table(c.result_table(baselines))
+st.subheader(f"% wins over time against baseline {baseline}")
 st.plotly_chart(c.visualize_wins(baseline))
 
 

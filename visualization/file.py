@@ -117,19 +117,19 @@ class File:
 
         return self.fold_avg_
 
-    def agg_trajectories(self):
+    def agg_trajectories(self, tasks):
         result = {
             task: {
                 optimizer: np.mean([iteration['loss_train'] for iteration in results], axis=0)
                 for optimizer, results in values.items()
             }
-            for task, values in self.data.items()
+            for task, values in self.data.items() if task in tasks
         }
         frame = pd.DataFrame(result).T  # Dataframe with one column
         return frame
 
 
-    def get_bests(self, agg_func):
+    def get_bests(self, agg_func, tasks):
         """
         Get the last result of every trajectory
         """
@@ -138,7 +138,7 @@ class File:
                 optimizer: list([iteration['loss_train'][-1] for iteration in results])
                 for optimizer, results in values.items()
             }
-            for task, values in self.data.items()
+            for task, values in self.data.items() if task in tasks
         }
         frame = pd.DataFrame(result).T  # Dataframe with one column
         return frame.applymap(agg_func)  # Mean of outer loop
