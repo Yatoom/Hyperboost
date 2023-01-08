@@ -70,9 +70,17 @@ self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncerta
 ```
 
 ### Hyperboost v4
-Beats SMAC in 64.% cases, ROAR in 74% cases, V2 in 68% cases and V3 in 55% cases
+Beats SMAC in 64.5% cases, ROAR in 74% cases, V2 in 68% cases and V3 in 55% cases
 ```python
 self.catboost = CatBoostRegressor(iterations=100, loss_function="RMSEWithUncertainty", posterior_sampling=False,
                                           verbose=False, random_seed=0, learning_rate=0.5,
                                           )
+```
+
+### Hyperboost v5
+Beats SMAC in 84% cases, ROAR in 87% cases, V2 in 84% cases, V3 in 74% cases and V4 in 64.5% cases. 
+Has best train loss and train ranking so far.
+```python
+self.catboost = CatBoostRegressor(iterations=100, loss_function="RMSEWithUncertainty", posterior_sampling=False,
+                                          verbose=False, random_seed=0, learning_rate=1.0, random_strength=0)
 ```

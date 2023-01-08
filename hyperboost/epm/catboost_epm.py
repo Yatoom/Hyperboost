@@ -52,20 +52,9 @@ class CatboostEPM(BaseEPM):
         )
         self.rng = np.random.RandomState(self.seed)
 
-        # Seems to work slightly better after 100 iterations.
-
-        # V2
-        # self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=True,
-        #                                    verbose=False, random_seed=0, learning_rate=0.3)
-
-        # V3
-        # self.catboost = CatBoostRegressor(iterations=100, loss_function='RMSEWithUncertainty', posterior_sampling=False,
-        #                                   verbose=False, random_seed=0, learning_rate=0.3)
-
-        # V4
+        # V5
         self.catboost = CatBoostRegressor(iterations=100, loss_function="RMSEWithUncertainty", posterior_sampling=False,
-                                          verbose=False, random_seed=0, learning_rate=0.5,
-                                          )
+                                          verbose=False, random_seed=0, learning_rate=1.0, random_strength=0)
 
         return None
 

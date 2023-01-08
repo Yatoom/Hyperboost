@@ -46,8 +46,8 @@ if show_input:
      """)
     st.table(c.overview)
 
-baselines = ["baseline/benchmark-roar_x2", "baseline/benchmark-smac", "baseline/v2-hyperboost", "baseline/v3-hyperboost"]
-baseline = "baseline/benchmark-roar_x2"
+baselines = ["baseline/benchmark-roar_x2", "baseline/benchmark-smac", "baseline/v2-hyperboost", "baseline/v3-hyperboost", "baseline/v4-hyperboost"]
+baseline = "baseline/benchmark-smac"
 st.subheader("% wins against baseline")
 st.table(c.result_table(baselines))
 st.subheader(f"% wins over time against baseline {baseline}")

@@ -179,7 +179,7 @@ class Collection:
         get_trajectories = lambda files: pd.concat([f.agg_trajectories(self.tasks) for f in files], axis=1)
         collected = [get_trajectories(group.files).rename(lambda x: f"{group.prefix}-{x}", axis=1) for group in self.groups]
         concatenated = pd.concat(collected, axis=1).T.groupby(level=0).agg(list).T
-        aggregated = concatenated.applymap(lambda x: np.median(x, axis=0))
+        aggregated = concatenated.applymap(lambda x: np.mean(x, axis=0))
         compared = aggregated.divide(aggregated[baseline], axis=0).applymap(lambda x: x <= 1)
         result = compared.T.agg(list, axis=1).map(lambda x: np.mean(x, axis=0))
         return pd.DataFrame(result.to_dict())[1:]
@@ -200,7 +200,7 @@ class Collection:
         result = pd.concat(dfs, axis=1)
 
         for baseline in baselines:
-            result[baseline].loc[baseline] = np.nan
+            result[baseline].loc[baseline] = 0.5
 
         result['mean'] = result.mean(axis=1)
         return result.sort_values('mean', ascending=False)
